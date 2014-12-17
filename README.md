@@ -22,8 +22,8 @@ Pasha is designed to be easily extensible. Its modules work the same way as [Hub
 ##Contribution
 Found a bug? Made a fix? Implemented a cool new feature? Or you just have some idea how to make it better? We are very pleased to see it! We are very happy if you help us to make Pasha better!
 
-For more information, visit the [contribution wiki page](https://github.com/prezi/pashaDoc/wiki/Contribution)!
+For more information, visit the [contribution wiki page](../../wiki/Contribution)!
 
 ##Documentation
-We created a [wiki](https://github.com/prezi/pashaDoc/wiki) to describe how Pasha work.
+We created a [wiki](../../wiki) to describe how Pasha work.
 
