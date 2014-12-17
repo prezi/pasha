@@ -21,10 +21,10 @@ Pasha is designed to be easily extensible. Its modules work the same way as Hubo
 
 ##Contribution
 Have you found a bug? Made a fix? Implemented a cool new feature? Or you just have some idea how to make it better? We are very pleased to see it and we are very happy if you help us to make Pasha better!
-For more about contribution, visit the contribution wiki page! (link_inserted_here)
+For more about contribution, visit the [contribution wiki page](https://github.com/prezi/pashaDoc/wiki/Contribution)!
 
 ##Documentation
-We created a wiki to answer all of your question, you can find it here (link)
+We created a [wiki](https://github.com/prezi/pashaDoc/wiki) to answer all of your question, you can find it here
 
 ##Support
 We created a fancy website at GitHub, check that out.
