@@ -22,9 +22,10 @@ Pasha is designed to be easily extensible. Its modules work the same way as [Hub
 ##How to use/install it locally?
 
 ###Requirements
- * [Redis](#../../wiki/Setting-up-the-Development-Environment#redis)
- * [Node] (#../../wiki/Setting-up-the-Development-Environment#node)
- * [Configuring Pasha](#../../wiki/Setting-up-the-Development-Environment#configuration)
+
+ * [Install Node] (#../../wiki/Setting-up-the-Development-Environment#node)
+ * [Install Redis](#../../wiki/Setting-up-the-Development-Environment#redis)
+ * [Configure Pasha](#../../wiki/Setting-up-the-Development-Environment#configuration)
 
 For more information, visit the [Setup wiki page](../../wiki/Setting-up-the-Development-Environment)!
 
