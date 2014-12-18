@@ -36,6 +36,8 @@ Run with a HipChat adapter from Pasha's root dir: ```./run_scripts/run_hipchat_a
 
 Pasha also have tests. You can run the tests with this command: ``./run_scripts/run_tests.sh``
 
+For more information, visit the [Scripts wiki page](../../wiki/wiki/Pasha-scripts)!
+
 ##Contribution
 Found a bug? Made a fix? Implemented a cool new feature? Or you just have some idea how to make it better? We are very pleased to see it! We are very happy if you help us to make Pasha better!
 
