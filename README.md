@@ -23,13 +23,13 @@ Pasha is designed to be easily extensible. Its modules work the same way as [Hub
 
 ###Requirements
 
- * [Install Node] (#../../wiki/Setting-up-the-Development-Environment#node)
- * [Install Redis](#../../wiki/Setting-up-the-Development-Environment#redis)
- * [Configure Pasha](#../../wiki/Setting-up-the-Development-Environment#configuration)
+ * [Install Node] (../../wiki/Setting-up-the-Development-Environment#node)
+ * [Install Redis](../../wiki/Setting-up-the-Development-Environment#redis)
+ * [Configure Pasha](../../wiki/Setting-up-the-Development-Environment#configuration)
 
 For more information, visit the [Setup wiki page](../../wiki/Setting-up-the-Development-Environment)!
 
-## Try it ?
+## Try it 
 
 Run with an interactive bash adapter from Pasha's root dir: ```./run_scripts/run_bash_adapter.sh```
 
