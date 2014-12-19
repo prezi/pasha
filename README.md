@@ -2,7 +2,7 @@
 
 ![Smart Router](doc/pasha.jpg)
 
- Pasha is a chat bot that is designed to help during Prio1s with relaying information, improving communication and executing certain tasks. It is a Hubot mod and it was mainly inspired by Gitub's [Chat Ops](https://www.youtube.com/watch?v=NST3u-GjjFw).
+ Pasha is a chat bot that is designed to help during outages (Prio1s) with relaying information, improving communication and executing certain tasks. It is a Hubot mod and it was mainly inspired by Gitub's [Chat Ops](https://www.youtube.com/watch?v=NST3u-GjjFw).
  
 At Prezi, Pasha has a crucial role during Prio1 situations and it helps us a lot to reduce outage time, increase the efficiency of the communication, to alert teams and people, to find relevant graphs and logs and to create the outage report by using Pasha’s logging functions. 
  
