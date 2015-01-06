@@ -35,7 +35,7 @@ Run with an interactive bash adapter from Pasha's root dir: ```./run_scripts/run
 
 Run with a HipChat adapter from Pasha's root dir: ```./run_scripts/run_hipchat_adapter.sh```
 
-Pasha also have tests. You can run the tests with this command: ``./run_scripts/run_tests.sh``
+Pasha also has tests. You can run the tests with this command: ``./run_scripts/run_tests.sh``
 
 For more information, visit the [Scripts wiki page](../../wiki/Pasha-scripts)!
 
@@ -45,5 +45,5 @@ Found a bug? Made a fix? Implemented a cool new feature? Or you just have some i
 For more information, visit the [contribution wiki page](../../wiki/Contribution)!
 
 ##Documentation
-We created a [wiki](../../wiki) to describe how Pasha work.
+We created a [wiki](../../wiki) to describe how Pasha works.
 
