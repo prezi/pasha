@@ -21,9 +21,12 @@ module.exports = (robot) ->
             switch path
                 when '/graphs'
                     scribeLog 'Prio1-dashboard 200: GET /graphs'
-                    res.writeHead 200,
-                        "Content-Type": "text/plain",
-                        "Access-Control-Allow-Origin": "*"
+                    resHead =
+                        "Content-Type": "text/plain"
+                    if process.env.DASHBOARD_ACCESS_CONTROL_ALLOW_ORIGIN
+                        value = process.env.DASHBOARD_ACCESS_CONTROL_ALLOW_ORIGIN
+                        resHead["Access-Control-Allow-Origin"] = value
+                    res.writeHead 200, resHead
                     charts = graphiteUtil.getGraphiteCharts(robot)
                     res.write JSON.stringify(charts)
                     res.end()
