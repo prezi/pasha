@@ -1,6 +1,6 @@
 # Pasha
 
-![Smart Router](doc/pasha.jpg)
+![ThePasha](doc/pasha.jpg)
 
  Pasha is a chat bot that is designed to help during outages (Prio1s) with relaying information, improving communication and executing certain tasks. It is a Hubot modification and it was mainly inspired by GitHub's [Chat Ops](https://www.youtube.com/watch?v=NST3u-GjjFw).
  
