@@ -26,6 +26,9 @@ module.exports = (robot) ->
                     if process.env.DASHBOARD_ACCESS_CONTROL_ALLOW_ORIGIN
                         value = process.env.DASHBOARD_ACCESS_CONTROL_ALLOW_ORIGIN
                         resHead["Access-Control-Allow-Origin"] = value
+                    if process.env.DASHBOARD_ACCESS_CONTROL_ALLOW_CREDENTIALS
+                        value = process.env.DASHBOARD_ACCESS_CONTROL_ALLOW_CREDENTIALS
+                        resHead["Access-Control-Allow-Credentials"] = value
                     res.writeHead 200, resHead
                     charts = graphiteUtil.getGraphiteCharts(robot)
                     res.write JSON.stringify(charts)
