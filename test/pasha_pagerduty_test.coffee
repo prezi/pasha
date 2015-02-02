@@ -29,14 +29,6 @@ describe 'command registration', () ->
         pagerduty_get_services = nock("https://#{pagerdutyHostName}")
             .get('/api/v1/services')
             .reply(200, get_services_response)
-        pagerduty_get_users = nock("https://#{pagerdutyHostName}")
-        .get('/api/v1/users/?query=test@example.com')
-        .reply(200, get_users_response)
-
-        pagerduty_get_users = nock("https://#{pagerdutyHostName}")
-        .get('/api/v1/users/PX123PD/notification_rules')
-        .reply(200, get_notifications_response)
-
 
         robot = new Robot(null, 'mock-adapter', false, botName)
         robot.adapter.on 'connected', ->
@@ -176,8 +168,14 @@ describe 'alert command', () ->
         adapter.receive(new TextMessage(user,
             "#{botName} alert list"))
 
-    it 'should return the user id', (done) ->
+    it 'should return the user\'s phone number', (done) ->
+        pagerduty_get_users = nock("https://#{pagerdutyHostName}")
+            .get('/api/v1/users/?query=test@example.com')
+            .reply(200, get_users_response)
 
+        pagerduty_get_notification = nock("https://#{pagerdutyHostName}")
+            .get('/api/v1/users/PX123PD/notification_rules')
+            .reply(200, get_notifications_response)
         adapter.on 'reply', (envelope, response) ->
             assert.equal(response[0], 'Phone numbers of test@example.com: +36987654321,+36123456789')
             done()
