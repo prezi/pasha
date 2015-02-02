@@ -177,7 +177,7 @@ describe 'alert command', () ->
             .get('/api/v1/users/PX123PD/notification_rules')
             .reply(200, get_notifications_response)
         adapter.on 'reply', (envelope, response) ->
-            assert.equal(response[0], 'Phone numbers of test@example.com: +36987654321,+36123456789')
+            assert.equal(response[0], 'Phone numbers: +36987654321,+36123456789')
             done()
         adapter.receive(new TextMessage(user,
-          "#{botName} alert phone test@example.com"))
+          "#{botName} phone test@example.com"))

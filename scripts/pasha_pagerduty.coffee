@@ -248,9 +248,9 @@ alertServiceByName = (msg, serviceName, description) ->
 phoneNumbers = (msg, email) ->
     getPhoneNumberByEmail(email, (phones) ->
         if phones == []
-            msg.reply "No phone numbers found for #{email}"
+            msg.reply "No phone numbers found"
         else
-            msg.reply "Phone numbers of #{email}: #{phones}"
+            msg.reply "Phone numbers: #{phones}"
     )
 # Commands
 # --------
@@ -260,16 +260,18 @@ phoneNumbers = (msg, email) ->
 alertTriggerService = /alert trigger ([^ ]+) (.+)$/i
 alertList = /alert list$/i
 alertHelp = /alert help$/i
-alertPhone = /alert phone (.+@.+)$/i
 alerthelpFromMain = /alert help_from_main/i
+getPhone = /phone (.+@.+)$/i
 
 commands =
     alert: [
         alertTriggerService,
         alertList,
         alertHelp,
-        alertPhone,
         alerthelpFromMain
+    ],
+    phone: [
+        getPhone
     ]
 
 # Module exports
@@ -297,7 +299,7 @@ module.exports = (robot) ->
             "return the phone number of a user\n"
         msg.reply response
 
-    robot.respond alertPhone, (msg) ->
+    robot.respond getPhone, (msg) ->
         email = msg.match[1]
         phoneNumbers(msg, email)
 

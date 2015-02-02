@@ -116,6 +116,8 @@ module.exports = (robot) ->
             else
                 msg.send "Full Name: #{u.name}\n" +
                          "Title: #{u.title}"
+                robot.receive(new TextMessage(msg.message.user,
+                  "#{botName} phone #{u.email}"))
         catch error
             scribeLog "ERROR #{error}"
 
