@@ -13,6 +13,8 @@ constant = require('../pasha_modules/constant').constant
 pashaPagerduty = require('../scripts/pasha_pagerduty')
 pashaPagerdutyCommands = pashaPagerduty.commands
 get_services_response = require('../test_files/services.json')
+get_users_response = require('../test_files/users.json')
+get_notifications_response = require('../test_files/notifications.json')
 
 botName = constant.botName
 pagerdutyHostName = process.env.PAGERDUTY_HOST_NAME
@@ -27,6 +29,14 @@ describe 'command registration', () ->
         pagerduty_get_services = nock("https://#{pagerdutyHostName}")
             .get('/api/v1/services')
             .reply(200, get_services_response)
+        pagerduty_get_users = nock("https://#{pagerdutyHostName}")
+        .get('/api/v1/users/?query=test@example.com')
+        .reply(200, get_users_response)
+
+        pagerduty_get_users = nock("https://#{pagerdutyHostName}")
+        .get('/api/v1/users/PX123PD/notification_rules')
+        .reply(200, get_notifications_response)
+
 
         robot = new Robot(null, 'mock-adapter', false, botName)
         robot.adapter.on 'connected', ->
@@ -165,3 +175,11 @@ describe 'alert command', () ->
             done()
         adapter.receive(new TextMessage(user,
             "#{botName} alert list"))
+
+    it 'should return the user id', (done) ->
+
+        adapter.on 'reply', (envelope, response) ->
+            assert.equal(response[0], 'Phone numbers of test@example.com: +36987654321,+36123456789')
+            done()
+        adapter.receive(new TextMessage(user,
+          "#{botName} alert phone test@example.com"))

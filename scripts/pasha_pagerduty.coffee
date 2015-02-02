@@ -20,7 +20,6 @@
 # Node imports
 https = require('https')
 http = require('http')
-
 # Pasha imports
 scribeLog = require('../pasha_modules/scribe_log').scribeLog
 constant = require('../pasha_modules/constant').constant
@@ -244,6 +243,15 @@ alertServiceByName = (msg, serviceName, description) ->
     else
         msg.reply "No service with name \"#{serviceName}\" exists"
 
+#<email>: the email address of the user
+#prints the phone numbers of a user
+phoneNumbers = (msg, email) ->
+    getPhoneNumberByEmail(email, (phones) ->
+        if phones == []
+            msg.reply "No phone numbers found for #{email}"
+        else
+            msg.reply "Phone numbers of #{email}: #{phones}"
+    )
 # Commands
 # --------
 
@@ -252,6 +260,7 @@ alertServiceByName = (msg, serviceName, description) ->
 alertTriggerService = /alert trigger ([^ ]+) (.+)$/i
 alertList = /alert list$/i
 alertHelp = /alert help$/i
+alertPhone = /alert phone (.+@.+)$/i
 alerthelpFromMain = /alert help_from_main/i
 
 commands =
@@ -259,6 +268,7 @@ commands =
         alertTriggerService,
         alertList,
         alertHelp,
+        alertPhone,
         alerthelpFromMain
     ]
 
@@ -282,8 +292,14 @@ module.exports = (robot) ->
         response = "#{botName} alert trigger <service_name> <description>: " +
             "triggers an alert to the service with the specified name\n" +
             "#{botName} alert list: " +
-            "lists the details of the active Pagerduty alerts"
+            "lists the details of the active Pagerduty alerts\n" +
+            "#{botName} alert phone <email>: " +
+            "return the phone number of a user\n"
         msg.reply response
+
+    robot.respond alertPhone, (msg) ->
+        email = msg.match[1]
+        phoneNumbers(msg, email)
 
     robot.respond alerthelpFromMain, (msg) ->
         msg.send "#{botName} alert <subcommand>: manages pagerduty alerts, " +
