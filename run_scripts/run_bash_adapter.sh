@@ -29,7 +29,11 @@ PROVISION_PORT=
 
 PRIO1_PLAYBOOK_URL=
 PRIO1_MONITORED_WEBSITE=
-PRIO1_ROOM=Ops
+PRIO1_ROOM=Ooops
+
+TWILIO_PHONE_NUMBER=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
 
 #set the path of the configuration file
 CONFIG_PATH=/etc/prezi/pasha/pasha.cfg
@@ -73,6 +77,10 @@ export PROVISION_PORT
 export PRIO1_PLAYBOOK_URL
 export PRIO1_MONITORED_WEBSITE
 export PRIO1_ROOM
+
+export TWILIO_PHONE_NUMBER
+export TWILIO_ACCOUNT_SID
+export TWILIO_AUTH_TOKEN
 
 # start hubot
 $(dirname $0)/../bin/hubot --name $BOT_NAME

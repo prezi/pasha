@@ -31,5 +31,9 @@ module.exports = {
         playbookUrl: process.env.PRIO1_PLAYBOOK_URL
         prio1MonitoredWebsite: process.env.PRIO1_MONITORED_WEBSITE
         prio1Room: process.env.PRIO1_ROOM
+
+        twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER
+        twilioAccountSid: process.env.TWILIO_ACCOUNT_SID
+        twilioAuthToken: process.env.TWILIO_AUTH_TOKEN
     }
 }

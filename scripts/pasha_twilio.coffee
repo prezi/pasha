@@ -7,7 +7,9 @@
 #   but it is more useful with it.
 #
 # Configuration
-#   TWILIO_SOMETHING
+#   TWILIO_PHONE_NUMBER
+#   TWILIO_ACCOUNT_SID
+#   TWILIO_AUTH_TOKEN
 #
 # Commands:
 #   <bot_name> summon <phone_number> <reason>
@@ -36,7 +38,16 @@ registerModuleCommands =
     require('../scripts/commands').registerModuleCommands
 util = require('../pasha_modules/util')
 
+# Constants
 botName = constant.botName
+twilioAccountSid = constant.twilioAccountSid
+twilioAuthToken = constant.twilioAuthToken
+twilioPhoneNumber = constant.twilioPhoneNumber
+
+# Helpers
+standardizePhoneNumber = (number) ->
+  n = number.replace(/\+/g, "").replace(/\ /g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/-/g, "")
+  return "+#{n}"
 
 # Commands
 summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
@@ -57,13 +68,6 @@ module.exports = (robot) ->
 
     registerModuleCommands(robot, commands)
 
-    robot.respond summonByPhoneNumber, (msg) ->
-        phone_number = msg.match[1]
-        reason = msg.match[2]
-        # TODO implement this
-        msg.reply "phone number: #{phone_number}\n" +
-          "reason: #{reason}"
-
     robot.respond summonByName, (msg) ->
         pdModulePath = path.join __dirname, "..", "scripts", "pasha_pagerduty.coffee"
         if (Fs.existsSync(pdModulePath))
@@ -80,16 +84,40 @@ module.exports = (robot) ->
         else
             msg.reply "PagerDuty module is not present, use '#{botName} summon phone_number text'"
 
+    robot.respond summonByPhoneNumber, (msg) ->
+      try
+        phoneNumber = standardizePhoneNumber(msg.match[1])
+        reason = msg.match[2]
+        msg.reply "phone number: #{phoneNumber}\n" +
+          "reason: #{reason}"
+        client = require('twilio')(twilioAccountSid, twilioAuthToken)
+        payload = {
+	         to: phoneNumber,
+	         from: twilioPhoneNumber,
+	         body: reason,
+        }
+        callback = (err, message) ->
+	         scribeLog "twilio response Sid: #{message.sid}"
+        client.messages.create(payload, callback)
+        scribeLog "sent SMS to: #{phoneNumber} with message: #{reason}"
+      catch error
+        scribeLog "ERROR #{error}"
 
     robot.respond summonHelp, (msg) ->
+      try
         response = "#{botName} summon <phone_number> <reason>: " +
             "Summons the owner of the specified <phone_number> with a <reason>\n" +
             "#{botName} summon <name> <reason>: " +
             "Summons <name> with a <reason>"
         msg.reply response
+      catch error
+        scribeLog "ERROR #{error}"
 
     robot.respond summonHelpFromMain, (msg) ->
+      try
         msg.send "#{botName} summon: summons people via Twilio, " +
             "see '#{botName} summon help' for details"
+      catch error
+        scribeLog "ERROR #{error}"
 
 module.exports.commands = commands

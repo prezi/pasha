@@ -12,6 +12,9 @@ PROVISION_HOST_NAME=provision.organization.com
 PRIO1_PLAYBOOK_URL=http://website.com/infra-prio1-playbook
 PRIO1_MONITORED_WEBSITE=sample.website.com
 PRIO1_ROOM=Ops
+TWILIO_PHONE_NUMBER=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
 
 export BOT_NAME
 export HIPCHAT_RELAY_ROOMS
@@ -22,6 +25,9 @@ export PROVISION_HOST_NAME
 export PRIO1_PLAYBOOK_URL
 export PRIO1_MONITORED_WEBSITE
 export PRIO1_ROOM
+export TWILIO_PHONE_NUMBER
+export TWILIO_ACCOUNT_SID
+export TWILIO_AUTH_TOKEN
 
 $(dirname $0)/../node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec
 
