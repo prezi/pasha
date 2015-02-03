@@ -308,3 +308,6 @@ module.exports = (robot) ->
             "see '#{botName} alert help' for details"
 
 module.exports.commands = commands
+
+module.exports.phone = (email, onSuccess) ->
+    getPhoneNumberByEmail(email, onSuccess)

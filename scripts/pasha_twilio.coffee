@@ -20,15 +20,21 @@
 #   <bot_name> summon help
 #        Responds with a description of the summon subcommands.
 
+# Hubot imports
+TextMessage = require('hubot/src/message').TextMessage
+
 # Node imports
 https = require('https')
 http = require('http')
+Fs = require('fs')
+path = require('path')
 
 # Pasha imports
 scribeLog = require('../pasha_modules/scribe_log').scribeLog
 constant = require('../pasha_modules/constant').constant
 registerModuleCommands =
     require('../scripts/commands').registerModuleCommands
+util = require('../pasha_modules/util')
 
 botName = constant.botName
 
@@ -59,11 +65,21 @@ module.exports = (robot) ->
           "reason: #{reason}"
 
     robot.respond summonByName, (msg) ->
-        name = msg.match[1]
-        reason = msg.match[2]
-        # TODO implement this
-        msg.reply "name: #{name}\n" +
-          "reason: #{reason}"
+        pdModulePath = path.join __dirname, "..", "scripts", "pasha_pagerduty.coffee"
+        if (Fs.existsSync(pdModulePath))
+            pagerduty = require('../scripts/pasha_pagerduty')
+            name = msg.match[1]
+            reason = msg.match[2]
+            pashaState = util.getOrInitState(robot)
+            u = util.getUser(name, msg.message.user.name, pashaState.users)
+            pagerduty.phone(u.email, (phones) ->
+                for phone in phones
+                    robot.receive(new TextMessage(msg.message.user, "#{botName} summon #{phone} #{reason}"))
+                    # TODO handle call success/failure
+            )
+        else
+            msg.reply "PagerDuty module is not present, use '#{botName} summon phone_number text'"
+
 
     robot.respond summonHelp, (msg) ->
         response = "#{botName} summon <phone_number> <reason>: " +
