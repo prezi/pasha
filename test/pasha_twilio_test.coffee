@@ -10,7 +10,8 @@ Robot = require('hubot/src/robot')
 TextMessage = require('hubot/src/message').TextMessage
 # Pasha imports
 constant = require('../pasha_modules/constant').constant
-pashaTwilio = require('../scripts/pasha_twilio')
+rewire = require("rewire");
+pashaTwilio = rewire('../scripts/pasha_twilio')
 pashaTwilioCommands = pashaTwilio.commands
 
 botName = constant.botName
@@ -48,3 +49,19 @@ describe 'command registration', () ->
             regexes = regexes.toString()
             registeredRegexes = robot.registeredCommands[command].toString()
             assert.equal(regexes, registeredRegexes)
+
+
+    it 'should not summon by name if no pagerduty module is available', (done) ->
+        rewire = require('rewire')
+        fsStub = {
+            existsSync: (path) ->
+                return false
+        }
+        # mock fs lib
+        pashaTwilio.__set__('Fs', fsStub)
+        adapter.on 'reply', (envelope, response) ->
+            assert.equal(response[0], "PagerDuty module is not present, use '#{botName} summon phone_number text'")
+            done()
+        adapter.receive(new TextMessage(user, "#{botName} summon lorem ipsum"))
+        # revert mocks
+        pashaTwilio.__set__('Fs', require('fs'))
