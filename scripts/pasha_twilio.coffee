@@ -49,6 +49,37 @@ standardizePhoneNumber = (number) ->
   n = number.replace(/\+/g, "").replace(/\ /g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/-/g, "")
   return "+#{n}"
 
+sendSms = (number, reason, roomName) ->
+  client = require('twilio')(twilioAccountSid, twilioAuthToken)
+  smsReason = "This is an automated text message from Prezi Pasha. " +
+    "You have been summoned to join the #{roomName} HipChat room. " +
+    "The reason is: #{reason}."
+  smsPayload = {
+     to: number,
+     from: twilioPhoneNumber,
+     body: smsReason,
+  }
+  smsCallback = (err, message) ->
+     scribeLog "twilio response Sid: #{message.sid}"
+  client.messages.create(smsPayload, smsCallback)
+
+phoneCall = (number, reason, roomName) ->
+  client = require('twilio')(twilioAccountSid, twilioAuthToken)
+  encodedRoomName = encodeURIComponent(roomName)
+  encodedReason = encodeURIComponent(reason)
+  twimletUrl = "http://twimlets.com/message?Message%5B0%5D=" +
+    "This%20is%20an%20automated%20phone%20call%20from%20Prezi%20Pasha." +
+    "%20You%20have%20been%20summoned%20to%20join%20the%20#{encodedRoomName}%20HipChat%20room." +
+    "%20The%20reason%20is%3A%20#{encodedReason}.&"
+  callPayload = {
+     to: number,
+     from: twilioPhoneNumber,
+     url: twimletUrl
+  }
+  callCallback = (err, responseData) ->
+     scribeLog "from: #{responseData.from}"
+  client.makeCall(callPayload, callCallback)
+
 # Commands
 summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
 summonByName = /summon ([^\+^0-9^\ ^\(^\)]*) (.+)$/i
@@ -69,37 +100,48 @@ module.exports = (robot) ->
     registerModuleCommands(robot, commands)
 
     robot.respond summonByName, (msg) ->
+      try
         pdModulePath = path.join __dirname, "..", "scripts", "pasha_pagerduty.coffee"
         if (Fs.existsSync(pdModulePath))
             pagerduty = require('../scripts/pasha_pagerduty')
             name = msg.match[1]
             reason = msg.match[2]
+            roomName = msg.message.room
             pashaState = util.getOrInitState(robot)
             u = util.getUser(name, msg.message.user.name, pashaState.users)
-            pagerduty.phone(u.email, (phones) ->
-                for phone in phones
-                    robot.receive(new TextMessage(msg.message.user, "#{botName} summon #{phone} #{reason}"))
-                    # TODO handle call success/failure
-            )
+            if u
+              pagerduty.phone(u.email, (numbers) ->
+                  for number in numbers
+                      phoneNumber = standardizePhoneNumber(number)
+
+                      sendSms(phoneNumber, reason, roomName)
+                      scribeLog "sent SMS to: #{name} (#{phoneNumber})"
+                      msg.reply "sent SMS to: #{name} (#{phoneNumber})"
+
+                      phoneCall(phoneNumber, reason, roomName)
+                      scribeLog "initiated phone call to: #{name} (#{phoneNumber})"
+                      msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
+              )
+            else
+              msg.reply "no such user: #{name}"
         else
             msg.reply "PagerDuty module is not present, use '#{botName} summon phone_number text'"
+      catch error
+        scribeLog "ERROR #{error}"
 
     robot.respond summonByPhoneNumber, (msg) ->
       try
         phoneNumber = standardizePhoneNumber(msg.match[1])
         reason = msg.match[2]
-        msg.reply "phone number: #{phoneNumber}\n" +
-          "reason: #{reason}"
-        client = require('twilio')(twilioAccountSid, twilioAuthToken)
-        payload = {
-	         to: phoneNumber,
-	         from: twilioPhoneNumber,
-	         body: reason,
-        }
-        callback = (err, message) ->
-	         scribeLog "twilio response Sid: #{message.sid}"
-        client.messages.create(payload, callback)
-        scribeLog "sent SMS to: #{phoneNumber} with message: #{reason}"
+        roomName = msg.message.room
+
+        sendSms(phoneNumber, reason, roomName)
+        scribeLog "sent SMS to: #{phoneNumber}"
+        msg.reply "sent SMS to: #{phoneNumber}"
+
+        phoneCall(phoneNumber, reason, roomName)
+        scribeLog "initiated phone call to: #{phoneNumber}"
+        msg.reply "initiated phone call to: #{phoneNumber}"
       catch error
         scribeLog "ERROR #{error}"
 
