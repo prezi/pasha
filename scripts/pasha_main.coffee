@@ -127,17 +127,17 @@ module.exports = (robot) ->
             "#{botName} status: display or set prio1 status, " +
             "see '#{botName} status help' for details"
         robot.receive(new TextMessage(msg.message.user,
-            "#{botName} changelog helpFromMain"))
+            "#{botName} changelog help_from_main"))
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} runchef help"))
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} reboot help"))
         robot.receive(new TextMessage(msg.message.user,
-            "#{botName} alert helpFromMain"))
+            "#{botName} alert help_from_main"))
         robot.receive(new TextMessage(msg.message.user,
-            "#{botName} graph helpFromMain"))
+            "#{botName} graph help_from_main"))
 
-    
+
     robot.respond prio1Help, (msg) ->
         response = "#{botName} prio1 start <problem>: initiate prio1 mode\n" +
             "#{botName} prio1 confirm: confirm prio1\n" +
