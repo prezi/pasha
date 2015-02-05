@@ -248,9 +248,9 @@ alertServiceByName = (msg, serviceName, description) ->
 phoneNumbers = (msg, email) ->
     getPhoneNumberByEmail(email, (phones) ->
         if phones == []
-            msg.reply "No phone numbers found"
+            msg.send "No phone numbers found"
         else
-            msg.reply "Phone numbers: #{phones}"
+            msg.send "Phone numbers: #{phones}"
     )
 # Commands
 # --------

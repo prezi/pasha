@@ -63,7 +63,7 @@ describe 'alert command', () ->
     user = null
     adapter = null
     pagerduty_get_services = null
-    
+
     beforeEach (done) ->
         pagerduty_get_services = nock("https://#{pagerdutyHostName}")
             .get('/api/v1/services')
@@ -176,7 +176,7 @@ describe 'alert command', () ->
         pagerduty_get_notification = nock("https://#{pagerdutyHostName}")
             .get('/api/v1/users/PX123PD/notification_rules')
             .reply(200, get_notifications_response)
-        adapter.on 'reply', (envelope, response) ->
+        adapter.on 'send', (envelope, response) ->
             assert.equal(response[0], 'Phone numbers: +36987654321,+36123456789')
             done()
         adapter.receive(new TextMessage(user,

@@ -26,8 +26,6 @@
 TextMessage = require('hubot/src/message').TextMessage
 
 # Node imports
-https = require('https')
-http = require('http')
 Fs = require('fs')
 path = require('path')
 
