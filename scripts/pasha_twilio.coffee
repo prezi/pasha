@@ -47,7 +47,7 @@ standardizePhoneNumber = (number) ->
   n = number.replace(/\+/g, "").replace(/\ /g, "").replace(/\(/g, "").replace(/\)/g, "").replace(/-/g, "")
   return "+#{n}"
 
-sendSms = (number, reason, roomName) ->
+sendSms = (number, reason, roomName, msg, name) ->
   client = require('twilio')(twilioAccountSid, twilioAuthToken)
   smsReason = "This is an automated text message from Prezi Pasha. " +
     "You have been summoned to join the #{roomName} HipChat room. " +
@@ -61,7 +61,7 @@ sendSms = (number, reason, roomName) ->
      scribeLog "twilio response Sid: #{message.sid}"
   client.messages.create(smsPayload, smsCallback)
 
-phoneCall = (number, reason, roomName) ->
+phoneCall = (number, reason, roomName, msg, name) ->
   client = require('twilio')(twilioAccountSid, twilioAuthToken)
   encodedRoomName = encodeURIComponent(roomName)
   encodedReason = encodeURIComponent(reason)
@@ -74,9 +74,19 @@ phoneCall = (number, reason, roomName) ->
      from: twilioPhoneNumber,
      url: twimletUrl
   }
-  callCallback = (err, responseData) ->
-     scribeLog "from: #{responseData.from}"
+  sid = null
+  callCallback = (err, call) ->
+     scribeLog "call sid: #{call.sid}"
+     sid = call.sid
   client.makeCall(callPayload, callCallback)
+  callStatusCallbackId = null
+  callStatusCallback = () ->
+    client.calls(sid).get((err, call) ->
+      msg.reply "the status of call to #{name} (#{number}) is: #{call.status}"
+      scribeLog "the status of call to #{name} (#{number}) is: #{call.status}"
+    )
+    clearInterval callStatusCallbackId
+  callStatusCallbackId = setInterval(callStatusCallback, 1000 * 120)
 
 # Commands
 summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
@@ -112,11 +122,11 @@ module.exports = (robot) ->
                   for number in numbers
                       phoneNumber = standardizePhoneNumber(number)
 
-                      sendSms(phoneNumber, reason, roomName)
+                      sendSms(phoneNumber, reason, roomName, msg, name)
                       scribeLog "sent SMS to: #{name} (#{phoneNumber})"
                       msg.reply "sent SMS to: #{name} (#{phoneNumber})"
 
-                      phoneCall(phoneNumber, reason, roomName)
+                      phoneCall(phoneNumber, reason, roomName, msg, name)
                       scribeLog "initiated phone call to: #{name} (#{phoneNumber})"
                       msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
               )
@@ -133,11 +143,11 @@ module.exports = (robot) ->
         reason = msg.match[2]
         roomName = msg.message.room
 
-        sendSms(phoneNumber, reason, roomName)
+        sendSms(phoneNumber, reason, roomName, msg, "?")
         scribeLog "sent SMS to: #{phoneNumber}"
         msg.reply "sent SMS to: #{phoneNumber}"
 
-        phoneCall(phoneNumber, reason, roomName)
+        phoneCall(phoneNumber, reason, roomName, msg, "?")
         scribeLog "initiated phone call to: #{phoneNumber}"
         msg.reply "initiated phone call to: #{phoneNumber}"
       catch error
