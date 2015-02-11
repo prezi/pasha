@@ -65,3 +65,23 @@ describe 'command registration', () ->
         adapter.receive(new TextMessage(user, "#{botName} summon lorem ipsum"))
         # revert mocks
         pashaTwilio.__set__('Fs', require('fs'))
+
+    it 'should summon a phone number both over SMS and phone call', (done) ->
+        sinon = require('sinon')
+        constant = require('../pasha_modules/constant').constant
+        twilioAccountSid = constant.twilioAccountSid
+        twilioAuthToken = constant.twilioAuthToken
+        twilio = require('twilio')(twilioAccountSid, twilioAuthToken)
+        mockMessages = sinon.mock(twilio.messages)
+        mockMessages.create = sinon.spy()
+        mockCall = sinon.spy()
+        pashaTwilio.__set__('client.messages', mockMessages)
+        pashaTwilio.__set__('client.makeCall', mockCall)
+        adapter.on 'reply', (envelope, response) ->
+            assert(mockMessages.create.called)
+            assert(response[0] == "initiated phone call to: +11234567890123" or response[0] == "sent SMS to: +11234567890123")
+            if response[0] == "initiated phone call to: +11234567890123"
+                assert(mockCall.called)
+                done()
+        adapter.receive(new TextMessage(user,
+          "#{botName} summon +1 123(456)789-0123 lorem - (ip)sum!"))

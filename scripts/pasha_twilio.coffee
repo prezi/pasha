@@ -41,6 +41,7 @@ botName = constant.botName
 twilioAccountSid = constant.twilioAccountSid
 twilioAuthToken = constant.twilioAuthToken
 twilioPhoneNumber = constant.twilioPhoneNumber
+client = require('twilio')(twilioAccountSid, twilioAuthToken)
 
 # Helpers
 standardizePhoneNumber = (number) ->
@@ -48,7 +49,7 @@ standardizePhoneNumber = (number) ->
   return "+#{n}"
 
 sendSms = (number, reason, roomName, msg, name) ->
-  client = require('twilio')(twilioAccountSid, twilioAuthToken)
+
   smsReason = "This is an automated text message from Prezi Pasha. " +
     "You have been summoned to join the #{roomName} HipChat room. " +
     "The reason is: #{reason}."
@@ -62,7 +63,6 @@ sendSms = (number, reason, roomName, msg, name) ->
   client.messages.create(smsPayload, smsCallback)
 
 phoneCall = (number, reason, roomName, msg, name) ->
-  client = require('twilio')(twilioAccountSid, twilioAuthToken)
   encodedRoomName = encodeURIComponent(roomName)
   encodedReason = encodeURIComponent(reason)
   twimletUrl = "http://twimlets.com/message?Message%5B0%5D=" +
