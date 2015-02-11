@@ -72,7 +72,8 @@ phoneCall = (number, reason, roomName, msg, name) ->
   callPayload = {
      to: number,
      from: twilioPhoneNumber,
-     url: twimletUrl
+     url: twimletUrl,
+     IfMachine: "Continue"
   }
   sid = null
   callCallback = (err, call) ->
@@ -82,11 +83,15 @@ phoneCall = (number, reason, roomName, msg, name) ->
   callStatusCallbackId = null
   callStatusCallback = () ->
     client.calls(sid).get((err, call) ->
-      msg.reply "the status of call to #{name} (#{number}) is: #{call.status}"
-      scribeLog "the status of call to #{name} (#{number}) is: #{call.status}"
+      wasPickedUp = ""
+      if (call.status != "completed" or call.answeredBy != "human")
+        wasPickedUp = "not "
+      callStatus = "the call to #{name} (#{number}) was #{wasPickedUp}picked up"
+      msg.reply callStatus
+      scribeLog callStatus
     )
     clearInterval callStatusCallbackId
-  callStatusCallbackId = setInterval(callStatusCallback, 1000 * 120)
+  callStatusCallbackId = setInterval(callStatusCallback, 1000 * 90)
 
 # Commands
 summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
