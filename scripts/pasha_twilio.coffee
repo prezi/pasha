@@ -50,7 +50,7 @@ standardizePhoneNumber = (number) ->
 
 sendSms = (number, reason, roomName, msg, name) ->
 
-  smsReason = "You have been summon by #{botName}." +
+  smsReason = "You have been summon by #{botName}. " +
       "Join the #{roomName} HipChat room. The reason is: #{reason}."
   smsPayload = {
      to: number,
@@ -94,11 +94,17 @@ phoneCall = (number, reason, roomName, msg, name) ->
 smsAndCall = (phoneNumber, reason, roomName, msg, name) ->
   sendSms(phoneNumber, reason, roomName, msg, name)
   scribeLog "sent SMS to: #{name} (#{phoneNumber})"
-  msg.reply "sent SMS to: #{name} (#{phoneNumber})"
+  if name == "?"
+    msg.reply "sent SMS to: #{phoneNumber}"
+  else
+    msg.reply "sent SMS to: #{name} (#{phoneNumber})"
 
   phoneCall(phoneNumber, reason, roomName, msg, name)
   scribeLog "initiated phone call to: #{name} (#{phoneNumber})"
-  msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
+  if name == "?"
+    msg.reply "initiated phone call to: #{phoneNumber}"
+  else
+    msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
 
 # Commands
 summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
