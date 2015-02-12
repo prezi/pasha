@@ -1,0 +1,1 @@
+{"users":[{"id":"PX123PD","name":"Test","email":"test@example.com","time_zone":"Budapest","color":"teal","role":"admin","description":"","user_url":"/users/PX123PD","invitation_sent":false,"marketing_opt_out":false,"job_title":"Developer"}],"query":"test@example.com","active_account_users":96,"limit":25,"offset":0,"total":1}

@@ -116,6 +116,8 @@ module.exports = (robot) ->
             else
                 msg.send "Full Name: #{u.name}\n" +
                          "Title: #{u.title}"
+                robot.receive(new TextMessage(msg.message.user,
+                  "#{botName} phone #{u.email}"))
         catch error
             scribeLog "ERROR #{error}"
 
@@ -136,6 +138,8 @@ module.exports = (robot) ->
             "#{botName} alert help_from_main"))
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} graph help_from_main"))
+        robot.receive(new TextMessage(msg.message.user,
+            "#{botName} summon help_from_main"))
 
 
     robot.respond prio1Help, (msg) ->
