@@ -129,7 +129,7 @@ module.exports = (robot) ->
             "#{botName} status: display or set prio1 status, " +
             "see '#{botName} status help' for details"
         robot.receive(new TextMessage(msg.message.user,
-            "#{botName} changelog helpFrom<ain"))
+            "#{botName} changelog helpFromMain"))
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} runchef help"))
         robot.receive(new TextMessage(msg.message.user,
