@@ -50,9 +50,8 @@ standardizePhoneNumber = (number) ->
 
 sendSms = (number, reason, roomName, msg, name) ->
 
-  smsReason = "This is an automated text message from Prezi Pasha. " +
-    "You have been summoned to join the #{roomName} HipChat room. " +
-    "The reason is: #{reason}."
+  smsReason = "You have been summon by #{botName}." +
+      "Join the #{roomName} HipChat room. The reason is: #{reason}."
   smsPayload = {
      to: number,
      from: twilioPhoneNumber,
@@ -63,12 +62,11 @@ sendSms = (number, reason, roomName, msg, name) ->
   client.messages.create(smsPayload, smsCallback)
 
 phoneCall = (number, reason, roomName, msg, name) ->
-  encodedRoomName = encodeURIComponent(roomName)
-  encodedReason = encodeURIComponent(reason)
-  twimletUrl = "http://twimlets.com/message?Message%5B0%5D=" +
-    "This%20is%20an%20automated%20phone%20call%20from%20Prezi%20Pasha." +
-    "%20You%20have%20been%20summoned%20to%20join%20the%20#{encodedRoomName}%20HipChat%20room." +
-    "%20The%20reason%20is%3A%20#{encodedReason}.&"
+  message = "You have been summon by #{botName}." +
+      "Join the #{roomName} HipChat room. The reason is: #{reason}. I repeat. " +
+      "Join the #{roomName} HipChat room. The reason is: #{reason}."
+  encodedMessage = encodeURIComponent(message)
+  twimletUrl = "http://twimlets.com/message?Message%5B0%5D=#{encodedMessage}&"
   callPayload = {
      to: number,
      from: twilioPhoneNumber,
@@ -92,6 +90,15 @@ phoneCall = (number, reason, roomName, msg, name) ->
     )
     clearInterval callStatusCallbackId
   callStatusCallbackId = setInterval(callStatusCallback, 1000 * 90)
+
+smsAndCall = (phoneNumber, reason, roomName, msg, name) ->
+  sendSms(phoneNumber, reason, roomName, msg, name)
+  scribeLog "sent SMS to: #{name} (#{phoneNumber})"
+  msg.reply "sent SMS to: #{name} (#{phoneNumber})"
+
+  phoneCall(phoneNumber, reason, roomName, msg, name)
+  scribeLog "initiated phone call to: #{name} (#{phoneNumber})"
+  msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
 
 # Commands
 summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
@@ -127,13 +134,7 @@ module.exports = (robot) ->
                   for number in numbers
                       phoneNumber = standardizePhoneNumber(number)
 
-                      sendSms(phoneNumber, reason, roomName, msg, name)
-                      scribeLog "sent SMS to: #{name} (#{phoneNumber})"
-                      msg.reply "sent SMS to: #{name} (#{phoneNumber})"
-
-                      phoneCall(phoneNumber, reason, roomName, msg, name)
-                      scribeLog "initiated phone call to: #{name} (#{phoneNumber})"
-                      msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
+                      smsAndCall(phoneNumber, reason, roomName, msg, name)
               )
             else
               msg.reply "no such user: #{name}"
@@ -147,14 +148,7 @@ module.exports = (robot) ->
         phoneNumber = standardizePhoneNumber(msg.match[1])
         reason = msg.match[2]
         roomName = msg.message.room
-
-        sendSms(phoneNumber, reason, roomName, msg, "?")
-        scribeLog "sent SMS to: #{phoneNumber}"
-        msg.reply "sent SMS to: #{phoneNumber}"
-
-        phoneCall(phoneNumber, reason, roomName, msg, "?")
-        scribeLog "initiated phone call to: #{phoneNumber}"
-        msg.reply "initiated phone call to: #{phoneNumber}"
+        smsAndCall(phoneNumber, reason, roomName, msg, "?")
       catch error
         scribeLog "ERROR #{error}"
 

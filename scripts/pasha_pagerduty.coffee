@@ -295,7 +295,7 @@ module.exports = (robot) ->
             "triggers an alert to the service with the specified name\n" +
             "#{botName} alert list: " +
             "lists the details of the active Pagerduty alerts\n" +
-            "#{botName} alert phone <email>: " +
+            "#{botName} phone <email>: " +
             "return the phone number of a user\n"
         msg.reply response
 

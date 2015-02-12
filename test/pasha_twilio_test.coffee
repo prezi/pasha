@@ -52,7 +52,6 @@ describe 'command registration', () ->
 
 
     it 'should not summon by name if no pagerduty module is available', (done) ->
-        rewire = require('rewire')
         fsStub = {
             existsSync: (path) ->
                 return false
@@ -79,7 +78,7 @@ describe 'command registration', () ->
         pashaTwilio.__set__('client.makeCall', mockCall)
         adapter.on 'reply', (envelope, response) ->
             sinon.assert.calledOnce(mockMessages.create)
-            smsReason = "This is an automated text message from Prezi Pasha. " +
+            smsReason = "This is an automated text message from #{botName}. " +
                 "You have been summoned to join the #mocha HipChat room. " +
                 "The reason is: lorem - (ip)sum!."
             smsPayload = {
