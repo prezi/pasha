@@ -78,10 +78,65 @@ describe 'command registration', () ->
         pashaTwilio.__set__('client.messages', mockMessages)
         pashaTwilio.__set__('client.makeCall', mockCall)
         adapter.on 'reply', (envelope, response) ->
-            assert(mockMessages.create.called)
+            sinon.assert.calledOnce(mockMessages.create)
+            smsReason = "This is an automated text message from Prezi Pasha. " +
+                "You have been summoned to join the #mocha HipChat room. " +
+                "The reason is: lorem - (ip)sum!."
+            smsPayload = {
+                to: "+11234567890123",
+                from: constant.twilioPhoneNumber,
+                body: smsReason,
+            }
+            sinon.assert.calledWithExactly(mockMessages.create, smsPayload, sinon.match.any)
             assert(response[0] == "initiated phone call to: +11234567890123" or response[0] == "sent SMS to: +11234567890123")
             if response[0] == "initiated phone call to: +11234567890123"
-                assert(mockCall.called)
+                callPayload = {
+                    to: "+11234567890123",
+                    from: constant.twilioPhoneNumber,
+                    url: sinon.match.any,
+                    IfMachine: "Continue"
+                }
+                sinon.assert.calledOnce(mockCall)
+                sinon.assert.calledWithExactly(mockCall, callPayload, sinon.match.any)
                 done()
         adapter.receive(new TextMessage(user,
           "#{botName} summon +1 123(456)789-0123 lorem - (ip)sum!"))
+
+    it 'should summon a person if a name is specified', (done) ->
+        # Mock getUser utility function
+        sinon = require('sinon')
+        util = require('../pasha_modules/util')
+        fakeUser = {
+            email: "test@example.com"
+        }
+        getUserStub = sinon.stub().returns(fakeUser)
+        util.getUser = getUserStub
+        pashaTwilio.__set__("util", util)
+
+        # Mock PagerDuty module
+        get_users_response = require('../test_files/users.json')
+        get_notifications_response = require('../test_files/notifications.json')
+        pagerdutyHostName = process.env.PAGERDUTY_HOST_NAME
+        pagerduty_get_users = nock("https://#{pagerdutyHostName}")
+            .get('/api/v1/users/?query=test@example.com')
+            .reply(200, get_users_response)
+        pagerduty_get_notification = nock("https://#{pagerdutyHostName}")
+            .get('/api/v1/users/PX123PD/notification_rules')
+            .reply(200, get_notifications_response)
+        # Mock Sms and calling functions
+        smsFunc = sinon.spy()
+        callingFunc = sinon.spy()
+        pashaTwilio.__set__('sendSms', smsFunc)
+        pashaTwilio.__set__('phoneCall', callingFunc)
+        # Assert
+        adapter.on 'reply', (envelope, response) ->
+            if response[0] == "initiated phone call to: lorem (+36123456789)" # this is the last reply
+                sinon.assert.callCount(smsFunc, 2)
+                sinon.assert.callCount(callingFunc, 2)
+                sinon.assert.calledWith(smsFunc, "+36987654321", "ipsum", "#mocha", sinon.match.any, "lorem")
+                sinon.assert.calledWith(smsFunc, "+36123456789", "ipsum", "#mocha", sinon.match.any, "lorem")
+                sinon.assert.calledWith(callingFunc, "+36987654321", "ipsum", "#mocha", sinon.match.any, "lorem")
+                sinon.assert.calledWith(callingFunc, "+36123456789", "ipsum", "#mocha", sinon.match.any, "lorem")
+                done()
+        adapter.receive(new TextMessage(user,
+          "#{botName} summon lorem ipsum"))
