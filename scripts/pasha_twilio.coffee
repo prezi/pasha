@@ -106,18 +106,51 @@ smsAndCall = (phoneNumber, reason, roomName, msg, name) ->
   else
     msg.reply "initiated phone call to: #{name} (#{phoneNumber})"
 
+summonByName = (msg, robot) ->
+  try
+    pdModulePath = path.join __dirname, "..", "scripts", "pasha_pagerduty.coffee"
+    if (Fs.existsSync(pdModulePath))
+        pagerduty = require('../scripts/pasha_pagerduty')
+        name = msg.match[1]
+        reason = msg.match[2]
+        roomName = msg.message.room
+        pashaState = util.getOrInitState(robot)
+        u = util.getUser(name, msg.message.user.name, pashaState.users)
+        if u
+          pagerduty.phone(u.email, (numbers) ->
+              for number in numbers
+                  phoneNumber = standardizePhoneNumber(number)
+
+                  smsAndCall(phoneNumber, reason, roomName, msg, name)
+          )
+        else
+          msg.reply "no such user: #{name}"
+    else
+        msg.reply "PagerDuty module is not present, use '#{botName} summon phone_number text'"
+  catch error
+    scribeLog "ERROR #{error}"
+
+summonByPhoneNumber = (msg, robot) ->
+  try
+    phoneNumber = standardizePhoneNumber(msg.match[1])
+    reason = msg.match[2]
+    roomName = msg.message.room
+    smsAndCall(phoneNumber, reason, roomName, msg, "?")
+  catch error
+    scribeLog "ERROR #{error}"
+
 # Commands
-summonByPhoneNumber = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
-summonByName = /summon ([^\+^0-9^\ ^\(^\)]*) (.+)$/i
-summonHelp = /summon help$/i
-summonHelpFromMain = /summon help_from_main$/i
+summonByPhoneNumberRe = /summon (\+?[0-9\ \-\(\)]*) (.+)$/i
+summonByNameRe = /summon ([^\+^0-9^\ ^\(^\)]*) (.+)$/i
+summonHelpRe = /summon help$/i
+summonHelpFromMainRe = /summon help_from_main$/i
 
 commands =
     summon: [
-        summonByPhoneNumber,
-        summonByName,
-        summonHelp,
-        summonHelpFromMain
+        summonByPhoneNumberRe,
+        summonByNameRe,
+        summonHelpRe,
+        summonHelpFromMainRe
     ]
 
 # Module exports
@@ -125,40 +158,13 @@ module.exports = (robot) ->
 
     registerModuleCommands(robot, commands)
 
-    robot.respond summonByName, (msg) ->
-      try
-        pdModulePath = path.join __dirname, "..", "scripts", "pasha_pagerduty.coffee"
-        if (Fs.existsSync(pdModulePath))
-            pagerduty = require('../scripts/pasha_pagerduty')
-            name = msg.match[1]
-            reason = msg.match[2]
-            roomName = msg.message.room
-            pashaState = util.getOrInitState(robot)
-            u = util.getUser(name, msg.message.user.name, pashaState.users)
-            if u
-              pagerduty.phone(u.email, (numbers) ->
-                  for number in numbers
-                      phoneNumber = standardizePhoneNumber(number)
+    robot.respond summonByNameRe, (msg) ->
+      summonByName(msg, robot)
 
-                      smsAndCall(phoneNumber, reason, roomName, msg, name)
-              )
-            else
-              msg.reply "no such user: #{name}"
-        else
-            msg.reply "PagerDuty module is not present, use '#{botName} summon phone_number text'"
-      catch error
-        scribeLog "ERROR #{error}"
+    robot.respond summonByPhoneNumberRe, (msg) ->
+      summonByPhoneNumber(msg, robot)
 
-    robot.respond summonByPhoneNumber, (msg) ->
-      try
-        phoneNumber = standardizePhoneNumber(msg.match[1])
-        reason = msg.match[2]
-        roomName = msg.message.room
-        smsAndCall(phoneNumber, reason, roomName, msg, "?")
-      catch error
-        scribeLog "ERROR #{error}"
-
-    robot.respond summonHelp, (msg) ->
+    robot.respond summonHelpRe, (msg) ->
       try
         response = "#{botName} summon <phone_number> <reason>: " +
             "Summons the owner of the specified <phone_number> with a <reason>\n" +
@@ -168,7 +174,7 @@ module.exports = (robot) ->
       catch error
         scribeLog "ERROR #{error}"
 
-    robot.respond summonHelpFromMain, (msg) ->
+    robot.respond summonHelpFromMainRe, (msg) ->
       try
         msg.send "#{botName} summon: summons people via Twilio, " +
             "see '#{botName} summon help' for details"

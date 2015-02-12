@@ -137,3 +137,30 @@ describe 'command registration', () ->
                 done()
         adapter.receive(new TextMessage(user,
           "#{botName} summon lorem ipsum"))
+
+      it 'should recognize phone numbers by regex', (done) ->
+          # Mock getUser utility function
+          sinon = require('sinon')
+
+          # Mock summon functions
+          summonByName = sinon.spy()
+          pashaTwilio.__set__('summonByName', summonByName)
+          summonByPhoneNumber = sinon.spy()
+          pashaTwilio.__set__('summonByPhoneNumber', summonByPhoneNumber)
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon +123456 foo"))
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon +(12) 34-56 foo"))
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon 12-3 4-5 6 foo"))
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon asd foo"))
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon @asd foo"))
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon a'sd foo"))
+          adapter.receive(new TextMessage(user,
+            "#{botName} summon asd: foo"))
+          done()
+          sinon.assert.callCount(summonByPhoneNumber, 3)
+          sinon.assert.callCount(summonByName, 4)
