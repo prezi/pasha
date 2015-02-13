@@ -82,9 +82,11 @@ phoneCall = (number, reason, roomName, msg, name) ->
   callStatusCallback = () ->
     client.calls(sid).get((err, call) ->
       wasPickedUp = ""
+      callResult = ""
       if (call.status != "completed" or call.answeredBy != "human")
         wasPickedUp = "not "
-      callStatus = "the call to #{name} (#{number}) was #{wasPickedUp}picked up"
+        callResult = " (#{call.status})"
+      callStatus = "the call to #{name} (#{number}) was #{wasPickedUp}picked up#{callResult}"
       msg.reply callStatus
       scribeLog callStatus
     )
