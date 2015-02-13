@@ -50,7 +50,7 @@ standardizePhoneNumber = (number) ->
 
 sendSms = (number, reason, roomName, msg, name) ->
 
-  smsReason = "You have been summon by #{botName}. " +
+  smsReason = "You have been summoned by #{botName}. " +
       "Join the #{roomName} HipChat room. The reason is: #{reason}."
   smsPayload = {
      to: number,
@@ -62,7 +62,7 @@ sendSms = (number, reason, roomName, msg, name) ->
   client.messages.create(smsPayload, smsCallback)
 
 phoneCall = (number, reason, roomName, msg, name) ->
-  message = "You have been summon by #{botName}." +
+  message = "You have been summoned by #{botName}." +
       "Join the #{roomName} HipChat room. The reason is: #{reason}. I repeat. " +
       "Join the #{roomName} HipChat room. The reason is: #{reason}."
   encodedMessage = encodeURIComponent(message)
@@ -85,7 +85,10 @@ phoneCall = (number, reason, roomName, msg, name) ->
       callResult = ""
       if (call.status != "completed" or call.answeredBy != "human")
         wasPickedUp = "not "
-        callResult = " (#{call.status})"
+        if call.status == "completed"
+          callResult = " (voicemail)"
+        else
+          callResult = " (#{call.status})"
       callStatus = "the call to #{name} (#{number}) was #{wasPickedUp}picked up#{callResult}"
       msg.reply callStatus
       scribeLog callStatus

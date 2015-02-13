@@ -78,7 +78,7 @@ describe 'command registration', () ->
         pashaTwilio.__set__('client.makeCall', mockCall)
         adapter.on 'reply', (envelope, response) ->
             sinon.assert.calledOnce(mockMessages.create)
-            smsReason = "You have been summon by pasha. Join the #mocha HipChat room. The reason is: lorem - (ip)sum!."
+            smsReason = "You have been summoned by pasha. Join the #mocha HipChat room. The reason is: lorem - (ip)sum!."
             smsPayload = {
                 to: "+11234567890123",
                 from: constant.twilioPhoneNumber,
