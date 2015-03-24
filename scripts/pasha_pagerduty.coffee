@@ -20,6 +20,7 @@
 # Node imports
 https = require('https')
 http = require('http')
+querystring = require('querystring')
 # Pasha imports
 scribeLog = require('../pasha_modules/scribe_log').scribeLog
 constant = require('../pasha_modules/constant').constant
@@ -140,7 +141,7 @@ getPDUserId = (email, onSuccess) ->
         httpsGetOptions = {
             hostname: pagerdutyHostName
             port: pagerdutyPort
-            path: "/api/v1/users/?query=#{email}"
+            path: "/api/v1/users/?query=#{querystring.escape(email)}"
             method: "GET"
             headers: {
                 'Authorization': auth
