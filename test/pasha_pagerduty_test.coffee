@@ -170,7 +170,7 @@ describe 'alert command', () ->
 
     it 'should return the user\'s phone number', (done) ->
         pagerduty_get_users = nock("https://#{pagerdutyHostName}")
-            .get('/api/v1/users/?query=test@example.com')
+            .get('/api/v1/users/?query=test%2Bemail%40example.com')
             .reply(200, get_users_response)
 
         pagerduty_get_notification = nock("https://#{pagerdutyHostName}")
@@ -180,4 +180,4 @@ describe 'alert command', () ->
             assert.equal(response[0], 'Phone numbers: +36987654321,+36123456789')
             done()
         adapter.receive(new TextMessage(user,
-          "#{botName} phone test@example.com"))
+          "#{botName} phone test+email@example.com"))
