@@ -5,7 +5,7 @@ module.exports = {
         pashaStateKey: 'PASHA_STATE'
 
         hipchatApiToken: process.env.HIPCHAT_API_TOKEN
-        hipchatRelayRooms: (process.env.HIPCHAT_RELAY_ROOMS).split(',')
+        hipchatRelayRooms: (process.env.HIPCHAT_RELAY_ROOMS || '').split(',')
             .filter (x) -> x.trim().length > 0
         hipchatMessageLimit: 10000
         hangoutUrl: process.env.HANGOUT_URL
