@@ -97,6 +97,9 @@ module.exports = (robot) ->
             for room in constant.hipchatRelayRooms
                 util.postToHipchat(room, message)
                 scribeLog "sending #{message} to #{room}"
+            for channel in constant.slackRelayChannels
+                util.postToSlack(channel, message)
+                scribeLog "sending #{message} to #{room}"
         catch error
             scribeLog "ERROR #{error}"
 
@@ -146,9 +149,9 @@ module.exports = (robot) ->
         response = "#{botName} prio1 start <problem>: initiate prio1 mode\n" +
             "#{botName} prio1 confirm: confirm prio1\n" +
             "#{botName} prio1 stop: stop prio1"
-            if hasValue(playbookUrl)
-                response += "\n#{playbookInfo}"
-            msg.send response
+        if hasValue(playbookUrl)
+            response += "\n#{playbookInfo}"
+        msg.send response
 
     robot.respond prio1Start, (msg) ->
         response =  "#{botName} prio1 start <problem>: initiate prio1 mode"
