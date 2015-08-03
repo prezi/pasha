@@ -30,7 +30,6 @@
     "hubot-scripts": "2.5.15",
     "hubot-slack": "^3.3.0",
     "moment": "2.8.3",
-    "nock": "0.44.3",
     "nodemailer": "1.2.2",
     "path": "0.11.14",
     "rewire": "2.1.4",
@@ -48,6 +47,8 @@
   "devDependencies": {
     "chai": "^1.10.0",
     "mocha": "1.21.4",
+    "nock": "^2.9.1",
+    "proxyquire": "^1.6.0",
     "sinon": "1.12.2"
   }
 }
