@@ -80,16 +80,20 @@ updateTopic = (token, updateTopicCallback, msg, newTopic) ->
     catch error
         scribeLog "ERROR " + error
 
-postViaHttps = (postOptions, postData) ->
+postViaHttps = (postOptions, postData, callback) ->
     data = ''
     req = https.request postOptions, (res) ->
-        console.log res
         res.on 'data', (chunk) ->
             data += chunk.toString()
+        req.on 'error', (err) ->
+            callback null, err if callback
+        res.on 'end', ->
+            callback data if callback
+    req.on 'error', (err) ->
+        callback null, err if callback
     req.write(postData)
     req.end()
     scribeLog "request sent to #{postOptions.hostname}"
-    return data
 
 postToHipchat = (channel, message) ->
     try
@@ -104,10 +108,13 @@ postToHipchat = (channel, message) ->
                 'Content-Length': Buffer.byteLength(postData)
             }
         }
-        response = postViaHttps httpsPostOptions, postData
-        scribeLog "hipchat response: #{response}"
+        response = postViaHttps httpsPostOptions, postData, (response, err) ->
+            if err
+                scribeLog "ERROR #{err}"
+            else
+                scribeLog "hipchat response: #{response}"
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR #{error}"
 
 postToSlack = (channel, message) ->
     try
@@ -127,10 +134,13 @@ postToSlack = (channel, message) ->
                 'Content-Length': Buffer.byteLength(postData)
             }
         }
-        response = postViaHttps httpsPostOptions, postData
-        scribeLog "slack response: #{response}"
+        postViaHttps httpsPostOptions, postData, (response, err) ->
+            if err
+                scribeLog "ERROR #{err}"
+            else
+                scribeLog "slack response: #{response}"
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR #{error}"
 
 generatePrio1Description = (prio1) ->
     return """
