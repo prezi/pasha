@@ -3,7 +3,7 @@
 # set default values for env vars
 BOT_NAME=pasha
 
-HUBOT_SLACK_TOKEN=xoxb-8191903975-qeeIhiDOCHDRc0CV3SLf7zLz
+HUBOT_SLACK_TOKEN=
 
 SLACK_RELAY_CHANNELS=
 
