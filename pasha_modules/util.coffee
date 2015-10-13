@@ -1,6 +1,7 @@
 scribeLog = require('../pasha_modules/scribe_log').scribeLog
 https = require('https')
 http = require('http')
+qs = require('querystring')
 constant = require('../pasha_modules/constant').constant
 State = require('../pasha_modules/model').State
 nodemailer = require "nodemailer"
@@ -79,6 +80,21 @@ updateTopic = (token, updateTopicCallback, msg, newTopic) ->
     catch error
         scribeLog "ERROR " + error
 
+postViaHttps = (postOptions, postData, callback) ->
+    data = ''
+    req = https.request postOptions, (res) ->
+        res.on 'data', (chunk) ->
+            data += chunk.toString()
+        req.on 'error', (err) ->
+            callback null, err if callback
+        res.on 'end', ->
+            callback data if callback
+    req.on 'error', (err) ->
+        callback null, err if callback
+    req.write(postData)
+    req.end()
+    scribeLog "request sent to #{postOptions.hostname}"
+
 postToHipchat = (channel, message) ->
     try
         postData = "room_id=#{channel}&from=Pasha&message=#{message}&notify=1"
@@ -92,17 +108,39 @@ postToHipchat = (channel, message) ->
                 'Content-Length': Buffer.byteLength(postData)
             }
         }
-        req = https.request httpsPostOptions, (res) ->
-            data = ''
-            res.on 'data', (chunk) ->
-                data += chunk.toString()
-            res.on 'end', () ->
-                scribeLog "hipchat response: #{data}"
-        req.write(postData)
-        req.end()
-        scribeLog "request sent"
+        response = postViaHttps httpsPostOptions, postData, (response, err) ->
+            if err
+                scribeLog "ERROR #{err}"
+            else
+                scribeLog "hipchat response: #{response}"
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR #{error}"
+
+postToSlack = (channel, message) ->
+    try
+        postData = qs.stringify {
+            token: constant.slackApiToken,
+            channel: channel,
+            text: message,
+            username: 'pasha'
+        }
+        httpsPostOptions = {
+            hostname: 'slack.com',
+            port: 443,
+            path: '/api/chat.postMessage',
+            method: 'POST'
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }
+        postViaHttps httpsPostOptions, postData, (response, err) ->
+            if err
+                scribeLog "ERROR #{err}"
+            else
+                scribeLog "slack response: #{response}"
+    catch error
+        scribeLog "ERROR #{error}"
 
 generatePrio1Description = (prio1) ->
     return """
@@ -201,11 +239,12 @@ hasValue = (str) ->
 
 module.exports = {
     getUser: getUser
-    downloadUsers : downloadUsers 
+    downloadUsers : downloadUsers
     getOrInitState: getOrInitState
     ack: ack
     updateTopic: updateTopic
     postToHipchat: postToHipchat
+    postToSlack: postToSlack
     sendEmail: sendEmail
     sendConfirmEmail: sendConfirmEmail
     sendStatusEmail: sendStatusEmail

@@ -29,7 +29,7 @@ export TWILIO_PHONE_NUMBER
 export TWILIO_ACCOUNT_SID
 export TWILIO_AUTH_TOKEN
 
-$(dirname $0)/../node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec
+$(dirname $0)/../node_modules/.bin/mocha --compilers coffee:coffee-script/register -R spec "$@"
 
 rm $(dirname $0)/../hubot-scripts.json
 mv $(dirname $0)/../hubot-scripts.json.bup $(dirname $0)/../hubot-scripts.json
