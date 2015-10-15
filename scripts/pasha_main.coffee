@@ -99,7 +99,7 @@ module.exports = (robot) ->
                 scribeLog "sending #{message} to #{room}"
             for channel in constant.slackRelayChannels
                 util.postToSlack(channel, message)
-                scribeLog "sending #{message} to #{room}"
+                scribeLog "sending #{message} to \##{channel}"
         catch error
             scribeLog "ERROR #{error}"
 

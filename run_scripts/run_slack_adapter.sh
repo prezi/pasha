@@ -52,6 +52,7 @@ fi
 export BOT_NAME
 
 export HUBOT_SLACK_TOKEN
+export SLACK_RELAY_CHANNELS
 
 export HANGOUT_URL
 
