@@ -21,6 +21,7 @@ if (process.env.SCRIBE_SERVER_ADDRESS? and
     scribeLog = (msg) ->
             d = new Date()
             timestamp = d.toISOString()
+            console.log "[#{timestamp}] #{msg}"
             scribe.send("pasha", "[#{timestamp}] #{msg}\n"))
 
 module.exports = {
