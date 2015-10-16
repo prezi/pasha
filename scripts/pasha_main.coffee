@@ -89,7 +89,7 @@ module.exports = (robot) ->
         if hasValue(constant.hipchatApiToken)
             util.downloadUsers(constant.hipchatApiToken, setUsers)
     catch error
-        scribeLog "ERROR #{error}"
+        scribeLog "ERROR initializing #{error}"
 
     relay = (message) ->
         scribeLog "relaying: #{message}"
@@ -101,13 +101,13 @@ module.exports = (robot) ->
                 util.postToSlack(channel, message)
                 scribeLog "sending #{message} to \##{channel}"
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR relay #{error}"
 
     robot.respond say, (msg) ->
         try
             msg.send msg.match[1]
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR say #{error}"
 
     robot.respond whois, (msg) ->
         try
@@ -122,7 +122,7 @@ module.exports = (robot) ->
                 robot.receive(new TextMessage(msg.message.user,
                   "#{botName} phone #{u.email}"))
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR whois #{error}"
 
     robot.respond help, (msg) ->
         msg.send "#{botName} prio1 <subcommand>: " +
@@ -193,7 +193,7 @@ module.exports = (robot) ->
                 "#{status}"))
             util.startNag robot, msg
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR prio1Start #{error}"
 
     updateTopicCallback = (msg, oldTopic, newTopic) ->
         try
@@ -206,7 +206,7 @@ module.exports = (robot) ->
             msg.topic newTopic
             scribeLog "set new topic: #{newTopic}"
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR updateTopic #{error}"
 
     robot.respond prio1Confirm, (msg) ->
         try
@@ -246,7 +246,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{user} confirmed the prio1"))
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR prio1Confirm #{error}"
 
     robot.respond prio1Stop, (msg) ->
         try
@@ -281,7 +281,7 @@ module.exports = (robot) ->
                 JSON.stringify(pashaState))
             scribeLog 'stopped prio1'
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR prio1Stop #{error}"
 
     robot.respond roleHelp, (msg) ->
         msg.send "#{botName} role leader <name>: " +
@@ -322,7 +322,7 @@ module.exports = (robot) ->
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "assigned comm role to #{name}"))
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR roleComm #{error}"
 
     robot.respond roleLeader, (msg) ->
         msg.send "#{botName} role leader <name>: " +
@@ -356,7 +356,7 @@ module.exports = (robot) ->
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned leader role to #{name}"))
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR roleLeader #{error}"
 
     robot.respond statusHelp, (msg) ->
         msg.send "#{botName} status: " +
@@ -385,7 +385,7 @@ module.exports = (robot) ->
                 "Communication: #{prio1.role.comm}"
             scribeLog "#{msg.message.user.name} displayed status"
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR status #{error}"
 
     robot.respond statusParameters, (msg) ->
         try
@@ -411,7 +411,7 @@ module.exports = (robot) ->
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "set status to #{status}"))
         catch error
-            scribeLog "ERROR #{error}"
+            scribeLog "ERROR statusText #{error}"
 
     robot.respond /healthcheck/i, (msg) ->
         msg.reply 'hello'
