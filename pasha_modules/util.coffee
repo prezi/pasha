@@ -27,7 +27,7 @@ downloadUsers = (token, setUsersCallback)->
                 setUsersCallback(users)
                 scribeLog "downloaded #{users.length} users"
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR downloadUsers #{error}"
         setUsersCallback([])
 
 getUser = (who, myName, users) ->
@@ -78,7 +78,7 @@ updateTopic = (token, updateTopicCallback, msg, newTopic) ->
                     if room.name == msg.message.room
                         updateTopicCallback(msg, room.topic, newTopic)
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR updateTopic #{error}"
 
 postViaHttps = (postOptions, postData, callback) ->
     data = ''
@@ -110,11 +110,11 @@ postToHipchat = (channel, message) ->
         }
         response = postViaHttps httpsPostOptions, postData, (response, err) ->
             if err
-                scribeLog "ERROR #{err}"
+                scribeLog "ERROR postToHipchat #{err}"
             else
                 scribeLog "hipchat response: #{response}"
     catch error
-        scribeLog "ERROR #{error}"
+        scribeLog "ERROR postToHipchat #{error}"
 
 postToSlack = (channel, message) ->
     try
@@ -136,11 +136,11 @@ postToSlack = (channel, message) ->
         }
         postViaHttps httpsPostOptions, postData, (response, err) ->
             if err
-                scribeLog "ERROR #{err}"
+                scribeLog "ERROR postToSlack #{err}"
             else
                 scribeLog "slack response: #{response}"
     catch error
-        scribeLog "ERROR #{error}"
+        scribeLog "ERROR postToSlack #{error}"
 
 generatePrio1Description = (prio1) ->
     return """
@@ -182,7 +182,7 @@ sendEmail = (subject, text) ->
         })
         scribeLog "email sent to #{constant.outageEmailAddress} with subject: #{subject}"
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR sendMail #{error}"
 
 pagerdutyAlert = (description) ->
     try
@@ -212,7 +212,7 @@ pagerdutyAlert = (description) ->
             req.end()
             scribeLog "pagerduty alert triggered: #{description}"
     catch error
-        scribeLog "ERROR " + error
+        scribeLog "ERROR pagerdutyAlert #{error}"
 
 
 startNag = (adapter, msg) ->
