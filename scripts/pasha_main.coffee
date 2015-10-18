@@ -94,12 +94,14 @@ module.exports = (robot) ->
     relay = (message) ->
         scribeLog "relaying: #{message}"
         try
-            for room in constant.hipchatRelayRooms
-                util.postToHipchat(room, message)
-                scribeLog "sending #{message} to #{room}"
-            for channel in constant.slackRelayChannels
-                util.postToSlack(channel, message)
-                scribeLog "sending #{message} to \##{channel}"
+            if constant.hipchatRelayRooms?.length > 0 && constant.hipchatApiToken
+                for room in constant.hipchatRelayRooms
+                    util.postToHipchat(room, message)
+                    scribeLog "sending #{message} to #{room}"
+            if constant.slackRelayChannels?.length > 0 && constant.slackApiToken
+                for channel in constant.slackRelayChannels
+                    util.postToSlack(channel, message)
+                    scribeLog "sending #{message} to \##{channel}"
         catch error
             scribeLog "ERROR relay #{error}"
 
