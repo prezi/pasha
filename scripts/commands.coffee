@@ -31,21 +31,22 @@ checker = (inp) ->
 
 module.exports = (robot) ->
 
-    robot.respond /(.*)/, (msg) ->
-        inp = msg.match[1]
-        if not inp
-            return
-        
-        words = inp.split(/\s+/)
+    if not process.env.PASHA_SKIP_COMMAND_NOT_FOUND?
+        robot.respond /(.*)/, (msg) ->
+            inp = msg.match[1]
+            if not inp
+                return
 
-        if robot.registeredCommands[words[0]] == undefined
-            msg.reply "Command not found: " + words[0]
-            return
+            words = inp.split(/\s+/)
 
-        if not robot.registeredCommands[words[0]].some(checker(inp))
-            msg.reply "Incorrect arguments for command: #{words[0]}\n" +
-                      "Type '#{botName} #{words[0]} help' to see command usage"
-            return
+            if robot.registeredCommands[words[0]] == undefined
+                msg.reply "Command not found: " + words[0]
+                return
+
+            if not robot.registeredCommands[words[0]].some(checker(inp))
+                msg.reply "Incorrect arguments for command: #{words[0]}\n" +
+                          "Type '#{botName} #{words[0]} help' to see command usage"
+                return
 
 module.exports.registerCommand = registerCommand
 module.exports.registerModuleCommands = registerModuleCommands
