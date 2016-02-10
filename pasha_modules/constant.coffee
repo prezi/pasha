@@ -10,6 +10,7 @@ module.exports = {
         hipchatMessageLimit: 10000
 
         slackApiToken: process.env.HUBOT_SLACK_TOKEN || ''
+        slackApiNonbotToken: process.env.HUBOT_SLACK_NONBOT_TOKEN || ''
         slackRelayChannels: (process.env.SLACK_RELAY_CHANNELS || '').split(',')
             .filter (x) -> x.trim().length > 0
 

@@ -6,6 +6,7 @@ constant = require('../pasha_modules/constant').constant
 State = require('../pasha_modules/model').State
 nodemailer = require "nodemailer"
 moment = require('moment')
+request = require('request')
 
 ack = ['roger', 'roger that', 'affirmative', 'ack', 'consider it done', 'done', 'aye captain']
 
@@ -115,6 +116,17 @@ postToHipchat = (channel, message) ->
                 scribeLog "hipchat response: #{response}"
     catch error
         scribeLog "ERROR postToHipchat #{error}"
+
+slackApi = (method, args, callback) ->
+    request.get({
+        url: "https://slack.com/api/#{method}",
+        qs: args
+    }, (err, res, body) ->
+        try
+            callback?(err, res, JSON.parse(body))
+        catch
+            callback?(err, res, body)
+    )
 
 postToSlack = (channel, message) ->
     try
@@ -251,4 +263,5 @@ module.exports = {
     pagerdutyAlert: pagerdutyAlert
     startNag: startNag
     hasValue: hasValue
+    slackApi: slackApi
 }

@@ -1,6 +1,7 @@
 # Pasha prio1 related functionalities
 # -----------------------------------
 
+dateformat = require('dateformat')
 # Hubot imports
 TextMessage = require('hubot/src/message').TextMessage
 # Pasha imports
@@ -78,7 +79,23 @@ commands =
     help: [help]
     healthcheck: [healthcheckCore]
 
+
+inviteUsersToSlackChannel = (channelId, userNames) ->
+    util.slackApi("users.list", {token: constant.slackApiToken}, (err, res, data) ->
+        for user in data.members
+            if userNames.indexOf(user.name) > -1
+                util.slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id}, (x, y, d) -> console.log(d))
+    ) 
+
 module.exports = (robot) ->
+    invitePrio1RolesToPrio1SlackChannel = () ->
+        pashaState = util.getOrInitState(robot)
+        inviteUsersToSlackChannel(pashaState.prio1.channel.id, [
+            pashaState.prio1.role.leader,
+            pashaState.prio1.role.confirmer,
+            pashaState.prio1.role.starter,
+            pashaState.prio1.role.comm
+        ])
 
     registerModuleCommands(robot, commands)
 
@@ -113,7 +130,7 @@ module.exports = (robot) ->
         try
             msg.send msg.match[1]
         catch error
-            scribeLog "ERROR say #{error}"
+            scribeLog "ERROR say #{error}\n#{error.stack}"
 
     robot.respond whois, (msg) ->
         try
@@ -242,6 +259,17 @@ module.exports = (robot) ->
                 msg.send "hangout url: #{constant.hangoutUrl}"
             util.updateHipchatTopic(constant.hipchatApiToken,
                 updateHipchatTopicCallback, msg, newTopic)
+            channelName = "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
+            util.slackApi("channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
+                if data.ok
+                    pashaState.prio1.channel = {id: channel.id, name: channelName}
+                    robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
+                    msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
+                    invitePrio1RolesToPrio1SlackChannel()
+                else
+                    msg.send("Failed to create channel #{channelName}: #{data.error}")
+            )
+
             msg.send "#{user} confirmed the prio1\n" +
                 "the leader of the prio1 is #{pashaState.prio1.role.leader}" +
                 ", you can change it with '#{botName} role leader <name>'"
@@ -327,6 +355,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "assigned comm role to #{name}"))
+            invitePrio1RolesToPrio1SlackChannel()
         catch error
             scribeLog "ERROR roleComm #{error}"
 
@@ -361,6 +390,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned leader role to #{name}"))
+            invitePrio1RolesToPrio1SlackChannel()
         catch error
             scribeLog "ERROR roleLeader #{error}"
 
@@ -428,6 +458,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "set status to #{status}"))
+            invitePrio1RolesToPrio1SlackChannel()
         catch error
             scribeLog "ERROR statusText #{error}"
 
