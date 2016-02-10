@@ -60,7 +60,7 @@ getOrInitState = (adapter) ->
     pashaState = JSON.parse(pashaStateStr)
     return pashaState
 
-updateTopic = (token, updateTopicCallback, msg, newTopic) ->
+updateHipchatTopic = (token, updateHipchatTopicCallback, msg, newTopic) ->
     try
         options = {
             hostname: "api.hipchat.com"
@@ -76,9 +76,9 @@ updateTopic = (token, updateTopicCallback, msg, newTopic) ->
                 rooms = JSON.parse(data)["rooms"]
                 for room in rooms
                     if room.name == msg.message.room
-                        updateTopicCallback(msg, room.topic, newTopic)
+                        updateHipchatTopicCallback(msg, room.topic, newTopic)
     catch error
-        scribeLog "ERROR updateTopic #{error}"
+        scribeLog "ERROR updateHipchatTopic #{error}"
 
 postViaHttps = (postOptions, postData, callback) ->
     data = ''
@@ -242,7 +242,7 @@ module.exports = {
     downloadUsers : downloadUsers
     getOrInitState: getOrInitState
     ack: ack
-    updateTopic: updateTopic
+    updateHipchatTopic: updateHipchatTopic
     postToHipchat: postToHipchat
     postToSlack: postToSlack
     sendEmail: sendEmail

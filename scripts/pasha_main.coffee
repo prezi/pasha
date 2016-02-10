@@ -201,7 +201,7 @@ module.exports = (robot) ->
         catch error
             scribeLog "ERROR prio1Start #{error}"
 
-    updateTopicCallback = (msg, oldTopic, newTopic) ->
+    updateHipchatTopicCallback = (msg, oldTopic, newTopic) ->
         try
             pashaState = util.getOrInitState(robot)
             pashaState.prio1.channel[msg.message.room] =
@@ -212,7 +212,7 @@ module.exports = (robot) ->
             msg.topic newTopic
             scribeLog "set new topic: #{newTopic}"
         catch error
-            scribeLog "ERROR updateTopic #{error}"
+            scribeLog "ERROR updateHipchatTopic #{error}"
 
     robot.respond prio1Confirm, (msg) ->
         try
@@ -240,8 +240,8 @@ module.exports = (robot) ->
             if hasValue(constant.hangoutUrl)
                 newTopic += " | hangout url: #{constant.hangoutUrl}"
                 msg.send "hangout url: #{constant.hangoutUrl}"
-            util.updateTopic(constant.hipchatApiToken,
-                updateTopicCallback, msg, newTopic)
+            util.updateHipchatTopic(constant.hipchatApiToken,
+                updateHipchatTopicCallback, msg, newTopic)
             msg.send "#{user} confirmed the prio1\n" +
                 "the leader of the prio1 is #{pashaState.prio1.role.leader}" +
                 ", you can change it with '#{botName} role leader <name>'"
