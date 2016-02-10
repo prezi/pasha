@@ -32,6 +32,7 @@ prio1Confirm = /prio1 confirm$/i
 prio1Stop = /prio1 stop$/i
 roleHelp = /role$|role help$/i
 # role
+roles = /roles$/i
 roleComm = /role comm$/i
 roleCommParameters = /role comm (.+)/i
 roleLeader = /role leader$/i
@@ -56,6 +57,9 @@ commands =
         prio1StartParameters,
         prio1Confirm,
         prio1Stop
+    ]
+    roles: [
+        roles
     ]
     role: [
         roleHelp,
@@ -359,6 +363,18 @@ module.exports = (robot) ->
                 " assigned leader role to #{name}"))
         catch error
             scribeLog "ERROR roleLeader #{error}"
+
+    robot.respond roles, (msg) ->
+        try
+            pashaState = util.getOrInitState(robot)
+            prio1 = pashaState.prio1
+            if not prio1?
+                msg.reply("There's no prio1 in progress")
+            else
+                for role, username of pashaState.prio1.role
+                    msg.send("#{role}: #{username}")
+        catch error
+            scribeLog "ERROR roles #{error}"
 
     robot.respond statusHelp, (msg) ->
         msg.send "#{botName} status: " +
