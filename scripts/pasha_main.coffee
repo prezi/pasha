@@ -80,14 +80,14 @@ commands =
     healthcheck: [healthcheckCore]
 
 
-inviteUsersToSlackChannel = (channelId, userNames) ->
-    util.slackApi("users.list", {token: constant.slackApiToken}, (err, res, data) ->
-        for user in data.members
-            if userNames.indexOf(user.name) > -1
-                util.slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id}, (x, y, d) -> console.log(d))
-    ) 
-
 module.exports = (robot) ->
+    inviteUsersToSlackChannel = (channelId, userNames) ->
+      pashaState = util.getOrInitState(robot)
+      for name in userNames
+          user = util.getUser(name, null, pashaState.users)
+          if user
+              util.slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id})
+
     invitePrio1RolesToPrio1SlackChannel = () ->
         pashaState = util.getOrInitState(robot)
         inviteUsersToSlackChannel(pashaState.prio1.channel.id, [
@@ -107,8 +107,8 @@ module.exports = (robot) ->
 
     try
         scribeLog 'initializing prio1 module'
-        if hasValue(constant.hipchatApiToken)
-            util.downloadUsers(constant.hipchatApiToken, setUsers)
+        if hasValue(constant.slackApiToken)
+            util.downloadUsers(constant.slackApiToken, setUsers)
     catch error
         scribeLog "ERROR initializing #{error}"
 
@@ -261,13 +261,14 @@ module.exports = (robot) ->
                 updateHipchatTopicCallback, msg, newTopic)
             channelName = "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
             util.slackApi("channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
-                if data.ok
-                    pashaState.prio1.channel = {id: channel.id, name: channelName}
+                console.log(data, data.ok, data.channel.id)
+                if !err && data.ok
+                    pashaState.prio1.channel = {id: data.channel.id, name: channelName}
                     robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
                     msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
                     invitePrio1RolesToPrio1SlackChannel()
                 else
-                    msg.send("Failed to create channel #{channelName}: #{data.error}")
+                    msg.send("Failed to create channel #{channelName}: #{err || data.error}")
             )
 
             msg.send "#{user} confirmed the prio1\n" +
@@ -280,7 +281,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{user} confirmed the prio1"))
         catch error
-            scribeLog "ERROR prio1Confirm #{error}"
+            scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
     robot.respond prio1Stop, (msg) ->
         try
@@ -357,7 +358,7 @@ module.exports = (robot) ->
                 "assigned comm role to #{name}"))
             invitePrio1RolesToPrio1SlackChannel()
         catch error
-            scribeLog "ERROR roleComm #{error}"
+            scribeLog "ERROR roleComm #{error} #{error.stack}"
 
     robot.respond roleLeader, (msg) ->
         msg.send "#{botName} role leader <name>: " +
