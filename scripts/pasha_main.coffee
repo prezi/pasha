@@ -293,6 +293,8 @@ module.exports = (robot) ->
                 scribeLog response
                 msg.reply "you #{response}"
                 return
+            if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
+                return msg.reply("Please use the channel ##{pashaState.prio1.channel.name} for all communication")
             user = msg.message.user.name
             response = "#{user} stopped the prio1: #{prio1.title}"
             msg.send response
@@ -344,7 +346,7 @@ module.exports = (robot) ->
                 else
                     msg.send("#{roleDescription} is not set")
         catch error
-            scribeLog "ERROR roles #{error} #{error.stack}"
+            scribeLog "ERROR cmdRoles #{error} #{error.stack}"
 
     robot.respond cmdRole, (msg) ->
         pashaState = util.getOrInitState(robot)
@@ -355,9 +357,13 @@ module.exports = (robot) ->
     robot.respond cmdRoleParameters, (msg) ->
         try
             pashaState = util.getOrInitState(robot)
-            return msg.reply("There's no prio1 in progress") unless pashaState.prio1?
             role = msg.match[1]
             who = msg.match[2]
+            return msg.reply("There's no prio1 in progress") unless pashaState.prio1?
+            if assignableRoles.indexOf(role) == -1
+                return msg.reply("Unknown role `#{role}`. The available roles: #{assignableRoles.join(', ')}")
+            if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
+                return msg.reply("Please use the channel ##{pashaState.prio1.channel.name} for all communication")
             scribeLog "setting #{role} role to: #{who}"
             prio1 = pashaState.prio1
             user = util.getUser(who, msg.message.user.name, pashaState.users)
@@ -377,7 +383,7 @@ module.exports = (robot) ->
                 " assigned #{role} role to #{name}"))
             invitePrio1RolesToPrio1SlackChannel()
         catch error
-            scribeLog "ERROR roleParameters #{error} #{error.stack}"
+            scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
     robot.respond statusHelp, (msg) ->
         msg.send "#{botName} status: " +
@@ -419,6 +425,8 @@ module.exports = (robot) ->
                 scribeLog response
                 msg.reply response
                 return
+            if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
+                return msg.reply("Please use the channel ##{pashaState.prio1.channel.name} for all communication")
             pashaState.prio1.status = status
             pashaState.prio1.time.lastStatus = new Date()
             robot.brain.set(constant.pashaStateKey,
