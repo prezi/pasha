@@ -95,12 +95,12 @@ describe 'prio1 command', () ->
             roomConfirmationMsg = " you can confirm it by joining the " +
                 "'#{prio1Room}' room and saying '#{botName} prio1 confirm'"
         hipchatApiMessage1 = nock('https://api.hipchat.com')
-        .post('/v1/rooms/message?format=json&auth_token=undefined',
+        .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 "room_id=room1&from=Pasha&message=mocha started a prio1: " +
                 "big trouble.#{roomConfirmationMsg}&notify=1"
             ).reply(200, '{"status":"sent"}')
         hipchatApiMessage2 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 "room_id=room2&from=Pasha&message=mocha started a prio1: " +
                 "big trouble.#{roomConfirmationMsg}&notify=1"
             ).reply(200, '{"status":"sent"}')
@@ -165,16 +165,16 @@ describe 'prio1 command', () ->
         pashaState.prio1 = prio1
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         hipchatApiRoomlist = nock('https://api.hipchat.com')
-            .get('/v1/rooms/list?format=json&auth_token=undefined')
+            .get('/v1/rooms/list?format=json&auth_token=test-hipchat-token')
             .reply(200, '{"rooms": [{"room_id": 0, "name": "mocha", ' +
                 '"topic": "foo"}]}')
         hipchatApiMessage1 = nock('https://api.hipchat.com')
-        .post('/v1/rooms/message?format=json&auth_token=undefined',
+        .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room1&from=Pasha&message=mocha confirmed the prio1' +
                 '&notify=1'
             ).reply(200, '{"status":"sent"}')
         hipchatApiMessage2 = nock('https://api.hipchat.com')
-        .post('/v1/rooms/message?format=json&auth_token=undefined',
+        .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room2&from=Pasha&message=mocha confirmed the prio1' +
                 '&notify=1'
             ).reply(200, '{"status":"sent"}')
@@ -186,11 +186,14 @@ describe 'prio1 command', () ->
                 description: "outage: big trouble"
             }).reply(200, '{"status":"success","message":"Event processed",' +
                 '"incident_key":"pdkey"}')
+        slackApi = nock('https://slack.com')
+        .get('/api/channels.create').query(true)
+        .reply(200, JSON.stringify({ok: true, channel: {}}))
+
         adapter.on "send", (envelope, responseLines) ->
             firstLine = responseLines[0].split('\n')[0]
-            assert.equal(firstLine, 'mocha confirmed the prio1',
-                'should accept confirm is there is an unconfirmed prio1')
-            done()
+            expectedLine = 'mocha confirmed the prio1'
+            done() if firstLine == expectedLine
         adapter.receive(new TextMessage(user, "#{botName} prio1 confirm"))
         pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
         assert(pashaState?)
@@ -237,12 +240,12 @@ describe 'prio1 command', () ->
         pashaState.prio1 = prio1
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         hipchatApiMessage1 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room1&from=Pasha&message=mocha stopped the prio1: ' +
                 'big trouble&notify=1'
             ).reply(200, '{"status":"sent"}')
         hipchatApiMessage2 = nock("https://api.hipchat.com")
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room2&from=Pasha&message=mocha stopped the prio1: ' +
                 'big trouble&notify=1'
             ).reply(200, '{"status":"sent"}')
@@ -264,12 +267,12 @@ describe 'prio1 command', () ->
         pashaState.prio1 = prio1
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         hipchatApiMessage1 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room1&from=Pasha&message=mocha stopped the prio1: ' +
                 'big trouble&notify=1'
             ).reply(200, '{"status":"sent"}')
         hipchatApiMessage2 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room2&from=Pasha&message=mocha stopped the prio1: ' +
                 'big trouble&notify=1'
             ).reply(200, '{"status":"sent"}')
@@ -432,9 +435,9 @@ describe 'prio1 command', () ->
     it 'should download the users from hipchat', ->
         setUsers = (users) ->
             assert(_.isEqual([{"name": "Clint Eastwood"}], users))
-        hipchatApiUsers = nock('https://api.hipchat.com')
-            .get('/v1/users/list?format=json&auth_token=')
-            .reply(200, '{"users": [{"name": "Clint Eastwood"}]}')
+        slackApiUsers = nock('https://slack.com')
+            .get('/api/users.list?token=')
+            .reply(200, '{"ok": true, "members": [{"name": "Clint Eastwood"}]}')
         downloadUsers = util.downloadUsers
         downloadUsers('', setUsers)
 
@@ -500,12 +503,12 @@ describe 'prio1 command', () ->
             "category": "pasha", "description": "mocha set status to foo"})
             .reply(200, 'OK')
         hipchatApiMessage1 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room1&from=Pasha&message=mocha set status to foo' +
                 '&notify=1'
             ).reply(200, '{"status":"sent"}')
         hipchatApiMessage2 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room2&from=Pasha&message=mocha set status to foo' +
                 '&notify=1'
             ).reply(200, '{"status":"sent"}')
@@ -528,12 +531,12 @@ describe 'prio1 command', () ->
             "category": "pasha", "description": "mocha set status to foo"})
             .reply(200, 'OK')
         hipchatApiMessage1 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 "room_id=room1&from=Pasha&message=mocha set status to foo" +
                 "&notify=1"
             ).reply(200, '{"status":"sent"}')
         hipchatApiMessage2 = nock('https://api.hipchat.com')
-            .post('/v1/rooms/message?format=json&auth_token=undefined',
+            .post('/v1/rooms/message?format=json&auth_token=test-hipchat-token',
                 'room_id=room2&from=Pasha&message=mocha set status to foo' +
                 '&notify=1'
             ).reply(200, '{"status":"sent"}')

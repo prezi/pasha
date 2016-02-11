@@ -4,6 +4,7 @@ mv $(dirname $0)/../hubot-scripts.json $(dirname $0)/../hubot-scripts.json.bup
 cp $(dirname $0)/../test_files/hubot-scripts.json $(dirname $0)/../hubot-scripts.json
 
 BOT_NAME=pasha
+HIPCHAT_API_TOKEN='test-hipchat-token'
 HIPCHAT_RELAY_ROOMS=room1,room2
 PAGERDUTY_SERVICE_KEYS=pdkey
 CHANGELOG_HOST_NAME=changelog.organization.com
@@ -18,6 +19,7 @@ TWILIO_AUTH_TOKEN=123abc
 
 export BOT_NAME
 export HIPCHAT_RELAY_ROOMS
+export HIPCHAT_API_TOKEN
 export PAGERDUTY_SERVICE_KEYS
 export CHANGELOG_HOST_NAME
 export PAGERDUTY_HOST_NAME

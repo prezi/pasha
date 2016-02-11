@@ -6,32 +6,23 @@ constant = require('../pasha_modules/constant').constant
 State = require('../pasha_modules/model').State
 nodemailer = require "nodemailer"
 moment = require('moment')
+request = require('request')
 
 ack = ['roger', 'roger that', 'affirmative', 'ack', 'consider it done', 'done', 'aye captain']
 
 downloadUsers = (token, setUsersCallback)->
     scribeLog "downloading users"
-    try
-        options = {
-            hostname: "api.hipchat.com"
-            port: 443
-            path: "/v1/users/list?format=json&auth_token=#{token}"
-            method: "GET"
-        }
-        https.get options, (res) ->
-            data = ''
-            res.on 'data', (chunk) ->
-                data += chunk.toString()
-            res.on 'end', () ->
-                users = JSON.parse(data)["users"]
-                setUsersCallback(users)
-                scribeLog "downloaded #{users.length} users"
-    catch error
-        scribeLog "ERROR downloadUsers #{error}"
-        setUsersCallback([])
+    slackApi("users.list", {token: constant.slackApiToken}, (err, res, data) ->
+        if err || !data.ok
+          scribeLog "ERROR downloadUsers #{err || data.error}"
+          setUsersCallback([])
+        else
+          setUsersCallback(data.members)
+          scribeLog "downloaded #{data.members.length} users"
+    )
 
 getUser = (who, myName, users) ->
-    name = who.toLowerCase().replace(/@/g, "").replace(/\s+$/g, "")
+    name = who?.toLowerCase().replace(/@/g, "").replace(/\s+$/g, "")
     if (name == "me")
         if not myName?
             scribeLog "cannot find 'me' because myName is not set"
@@ -39,10 +30,10 @@ getUser = (who, myName, users) ->
         name = myName.toLowerCase().replace(/@/g, "").replace(/\s+$/g, "")
     matchedUsers = []
     for user in users
-        if (user.name.toLowerCase() == name or user.mention_name.toLowerCase() == name)
+        if (user.name.toLowerCase() == name)
             scribeLog "user found: #{user.name}"
             return user
-        if (user.name.toLowerCase().indexOf(name) != -1 or user.mention_name.toLowerCase().indexOf(name) != -1)
+        if (user.name.toLowerCase().indexOf(name) != -1)
             matchedUsers.push user
     if (matchedUsers.length == 1)
         user = matchedUsers[0]
@@ -60,7 +51,7 @@ getOrInitState = (adapter) ->
     pashaState = JSON.parse(pashaStateStr)
     return pashaState
 
-updateTopic = (token, updateTopicCallback, msg, newTopic) ->
+updateHipchatTopic = (token, updateHipchatTopicCallback, msg, newTopic) ->
     try
         options = {
             hostname: "api.hipchat.com"
@@ -76,9 +67,9 @@ updateTopic = (token, updateTopicCallback, msg, newTopic) ->
                 rooms = JSON.parse(data)["rooms"]
                 for room in rooms
                     if room.name == msg.message.room
-                        updateTopicCallback(msg, room.topic, newTopic)
+                        updateHipchatTopicCallback(msg, room.topic, newTopic)
     catch error
-        scribeLog "ERROR updateTopic #{error}"
+        scribeLog "ERROR updateHipchatTopic #{error}"
 
 postViaHttps = (postOptions, postData, callback) ->
     data = ''
@@ -115,6 +106,17 @@ postToHipchat = (channel, message) ->
                 scribeLog "hipchat response: #{response}"
     catch error
         scribeLog "ERROR postToHipchat #{error}"
+
+slackApi = (method, args, callback) ->
+    request.get({
+        url: "https://slack.com/api/#{method}",
+        qs: args
+    }, (err, res, body) ->
+        if err
+            callback?(err, res, body)
+        else
+            callback?(err, res, JSON.parse(body))
+    )
 
 postToSlack = (channel, message) ->
     try
@@ -229,7 +231,7 @@ startNag = (adapter, msg) ->
             return
         try
             nagTarget = if prio1.role.comm then prio1.role.comm else prio1.role.starter
-            msg.send "@#{getUser(nagTarget, null, state.users).mention_name}, please use '#{constant.botName} status <some status update>' regularly, the last status update for the current outage was at #{moment.unix(prio1.time.lastStatus).fromNow()}"
+            msg.send "@#{getUser(nagTarget, null, state.users).name}, please use '#{constant.botName} status <some status update>' regularly, the last status update for the current outage was at #{moment.unix(prio1.time.lastStatus).fromNow()}"
         catch error
             scribeLog "ERROR nagger #{error}"
     naggerCallbackId = setInterval(nagger, 10 * 60 * 1000)
@@ -242,7 +244,7 @@ module.exports = {
     downloadUsers : downloadUsers
     getOrInitState: getOrInitState
     ack: ack
-    updateTopic: updateTopic
+    updateHipchatTopic: updateHipchatTopic
     postToHipchat: postToHipchat
     postToSlack: postToSlack
     sendEmail: sendEmail
@@ -251,4 +253,5 @@ module.exports = {
     pagerdutyAlert: pagerdutyAlert
     startNag: startNag
     hasValue: hasValue
+    slackApi: slackApi
 }

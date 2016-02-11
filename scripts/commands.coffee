@@ -48,6 +48,8 @@ module.exports = (robot) ->
                           "Type '#{botName} #{words[0]} help' to see command usage"
                 return
 
+     registerCommand(robot, "reload", [/reload/])
+
 module.exports.registerCommand = registerCommand
 module.exports.registerModuleCommands = registerModuleCommands
 module.exports.checker = checker

@@ -1,6 +1,7 @@
 # Pasha prio1 related functionalities
 # -----------------------------------
 
+dateformat = require('dateformat')
 # Hubot imports
 TextMessage = require('hubot/src/message').TextMessage
 # Pasha imports
@@ -32,6 +33,7 @@ prio1Confirm = /prio1 confirm$/i
 prio1Stop = /prio1 stop$/i
 roleHelp = /role$|role help$/i
 # role
+roles = /roles$/i
 roleComm = /role comm$/i
 roleCommParameters = /role comm (.+)/i
 roleLeader = /role leader$/i
@@ -57,6 +59,9 @@ commands =
         prio1Confirm,
         prio1Stop
     ]
+    roles: [
+        roles
+    ]
     role: [
         roleHelp,
         roleComm,
@@ -74,7 +79,23 @@ commands =
     help: [help]
     healthcheck: [healthcheckCore]
 
+
 module.exports = (robot) ->
+    inviteUsersToSlackChannel = (channelId, userNames) ->
+      pashaState = util.getOrInitState(robot)
+      for name in userNames
+          user = util.getUser(name, null, pashaState.users)
+          if user
+              util.slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id})
+
+    invitePrio1RolesToPrio1SlackChannel = () ->
+        pashaState = util.getOrInitState(robot)
+        inviteUsersToSlackChannel(pashaState.prio1.channel.id, [
+            pashaState.prio1.role.leader,
+            pashaState.prio1.role.confirmer,
+            pashaState.prio1.role.starter,
+            pashaState.prio1.role.comm
+        ])
 
     registerModuleCommands(robot, commands)
 
@@ -86,8 +107,8 @@ module.exports = (robot) ->
 
     try
         scribeLog 'initializing prio1 module'
-        if hasValue(constant.hipchatApiToken)
-            util.downloadUsers(constant.hipchatApiToken, setUsers)
+        if hasValue(constant.slackApiToken)
+            util.downloadUsers(constant.slackApiToken, setUsers)
     catch error
         scribeLog "ERROR initializing #{error}"
 
@@ -109,7 +130,7 @@ module.exports = (robot) ->
         try
             msg.send msg.match[1]
         catch error
-            scribeLog "ERROR say #{error}"
+            scribeLog "ERROR say #{error}\n#{error.stack}"
 
     robot.respond whois, (msg) ->
         try
@@ -197,7 +218,7 @@ module.exports = (robot) ->
         catch error
             scribeLog "ERROR prio1Start #{error}"
 
-    updateTopicCallback = (msg, oldTopic, newTopic) ->
+    updateHipchatTopicCallback = (msg, oldTopic, newTopic) ->
         try
             pashaState = util.getOrInitState(robot)
             pashaState.prio1.channel[msg.message.room] =
@@ -208,7 +229,7 @@ module.exports = (robot) ->
             msg.topic newTopic
             scribeLog "set new topic: #{newTopic}"
         catch error
-            scribeLog "ERROR updateTopic #{error}"
+            scribeLog "ERROR updateHipchatTopic #{error}"
 
     robot.respond prio1Confirm, (msg) ->
         try
@@ -236,8 +257,8 @@ module.exports = (robot) ->
             if hasValue(constant.hangoutUrl)
                 newTopic += " | hangout url: #{constant.hangoutUrl}"
                 msg.send "hangout url: #{constant.hangoutUrl}"
-            util.updateTopic(constant.hipchatApiToken,
-                updateTopicCallback, msg, newTopic)
+            util.updateHipchatTopic(constant.hipchatApiToken,
+                updateHipchatTopicCallback, msg, newTopic)
             msg.send "#{user} confirmed the prio1\n" +
                 "the leader of the prio1 is #{pashaState.prio1.role.leader}" +
                 ", you can change it with '#{botName} role leader <name>'"
@@ -246,9 +267,22 @@ module.exports = (robot) ->
             util.pagerdutyAlert("outage: #{pashaState.prio1.title}")
             scribeLog "confirmed prio1"
             robot.receive(new TextMessage(msg.message.user,
-                "#{botName} changelog addsilent #{user} confirmed the prio1"))
+              "#{botName} changelog addsilent #{user} confirmed the prio1"))
+
+            channelName = "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
+            util.slackApi("channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
+                if !err && data.ok
+                    pashaState.prio1.channel = {id: data.channel.id, name: channelName}
+                    robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
+                    msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
+                    invitePrio1RolesToPrio1SlackChannel()
+                else
+                    msg.send("Failed to create channel #{channelName}: #{err || data.error}")
+
+            )
+
         catch error
-            scribeLog "ERROR prio1Confirm #{error}"
+            scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
     robot.respond prio1Stop, (msg) ->
         try
@@ -323,8 +357,9 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "assigned comm role to #{name}"))
+            invitePrio1RolesToPrio1SlackChannel()
         catch error
-            scribeLog "ERROR roleComm #{error}"
+            scribeLog "ERROR roleComm #{error} #{error.stack}"
 
     robot.respond roleLeader, (msg) ->
         msg.send "#{botName} role leader <name>: " +
@@ -357,8 +392,21 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned leader role to #{name}"))
+            invitePrio1RolesToPrio1SlackChannel()
         catch error
             scribeLog "ERROR roleLeader #{error}"
+
+    robot.respond roles, (msg) ->
+        try
+            pashaState = util.getOrInitState(robot)
+            prio1 = pashaState.prio1
+            if not prio1?
+                msg.reply("There's no prio1 in progress")
+            else
+                for role, username of pashaState.prio1.role
+                    msg.send("#{role}: #{username}")
+        catch error
+            scribeLog "ERROR roles #{error}"
 
     robot.respond statusHelp, (msg) ->
         msg.send "#{botName} status: " +
@@ -412,6 +460,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "set status to #{status}"))
+            invitePrio1RolesToPrio1SlackChannel()
         catch error
             scribeLog "ERROR statusText #{error}"
 
