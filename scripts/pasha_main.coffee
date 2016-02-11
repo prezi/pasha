@@ -161,7 +161,6 @@ module.exports = (robot) ->
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} summon help_from_main"))
 
-
     robot.respond prio1Help, (msg) ->
         response = "#{botName} prio1 start <problem>: initiate prio1 mode\n" +
             "#{botName} prio1 confirm: confirm prio1\n" +
@@ -263,17 +262,22 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
               "#{botName} changelog addsilent #{user} confirmed the prio1"))
 
-            channelName = "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
-            util.slackApi("channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
-                if !err && data.ok
-                    pashaState.prio1.channel = {id: data.channel.id, name: channelName}
-                    robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
-                    msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
-                    invitePrio1RolesToPrio1SlackChannel()
+            createChannel = (baseName, tryNum = 0) ->
+                if tryNum > 0
+                    channelName = "#{baseName}-#{tryNum}"
                 else
-                    msg.send("Failed to create channel #{channelName}: #{err || data.error}")
-
-            )
+                    channelName = baseName
+                util.slackApi "channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
+                    if !err && data.ok
+                        pashaState.prio1.channel = {id: data.channel.id, name: channelName}
+                        robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
+                        msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
+                        invitePrio1RolesToPrio1SlackChannel()
+                    else
+                        msg.send("Failed to create channel #{channelName}: #{err || data.error}")
+                        if data?.error == 'name_taken'
+                            createChannel(baseName, tryNum + 1)
+            createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
 
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
