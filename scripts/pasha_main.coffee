@@ -87,7 +87,7 @@ module.exports = (robot) ->
     invitePrio1RolesToPrio1SlackChannel = () ->
         pashaState = util.getOrInitState(robot)
         return unless pashaState.prio1.channel?
-        usersToInvite = []
+        usersToInvite = [botName]
         for own role, name of pashaState.prio1.role when name?
             usersToInvite.push name if usersToInvite.indexOf(name) == -1
         inviteUsersToSlackChannel(pashaState.prio1.channel.id, usersToInvite)
