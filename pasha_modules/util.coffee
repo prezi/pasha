@@ -22,7 +22,7 @@ downloadUsers = (token, setUsersCallback)->
     )
 
 getUser = (who, myName, users) ->
-    name = who.toLowerCase().replace(/@/g, "").replace(/\s+$/g, "")
+    name = who?.toLowerCase().replace(/@/g, "").replace(/\s+$/g, "")
     if (name == "me")
         if not myName?
             scribeLog "cannot find 'me' because myName is not set"

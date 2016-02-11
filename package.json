@@ -50,7 +50,7 @@
   "devDependencies": {
     "chai": "1.10.0",
     "mocha": "1.21.4",
-    "nock": "0.44.3",
+    "nock": "^7.0.2",
     "proxyquire": "1.6.0",
     "sinon": "1.12.2",
     "sinon-chai": "2.8.0"
