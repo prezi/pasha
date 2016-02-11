@@ -108,7 +108,7 @@ module.exports = (robot) ->
             if constant.slackRelayChannels?.length > 0 && constant.slackApiToken
                 for channel in constant.slackRelayChannels
                     util.postToSlack(channel, message)
-                    scribeLog "sending #{message} to \##{channel}"
+                    scribeLog "sending #{message} to ##{channel}"
         catch error
             scribeLog "ERROR relay #{error}"
 
@@ -271,7 +271,7 @@ module.exports = (robot) ->
                     if !err && data.ok
                         pashaState.prio1.channel = {id: data.channel.id, name: channelName}
                         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
-                        msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
+                        msg.send("Created channel <##{data.channel.id}>, please join and keep all prio1 communication there.")
                         invitePrio1RolesToPrio1SlackChannel()
                     else
                         msg.send("Failed to create channel #{channelName}: #{err || data.error}")
@@ -294,7 +294,7 @@ module.exports = (robot) ->
                 msg.reply "you #{response}"
                 return
             if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
-                return msg.reply("Please use the channel ##{pashaState.prio1.channel.name} for all communication")
+                return msg.reply("Please use the channel <##{pashaState.prio1.channel.id}> for all communication")
             user = msg.message.user.name
             response = "#{user} stopped the prio1: #{prio1.title}"
             msg.send response
@@ -363,7 +363,7 @@ module.exports = (robot) ->
             if assignableRoles.indexOf(role) == -1
                 return msg.reply("Unknown role `#{role}`. The available roles: #{assignableRoles.join(', ')}")
             if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
-                return msg.reply("Please use the channel ##{pashaState.prio1.channel.name} for all communication")
+                return msg.reply("Please use the channel <##{pashaState.prio1.channel.id}> for all communication")
             scribeLog "setting #{role} role to: #{who}"
             prio1 = pashaState.prio1
             user = util.getUser(who, msg.message.user.name, pashaState.users)
@@ -426,7 +426,7 @@ module.exports = (robot) ->
                 msg.reply response
                 return
             if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
-                return msg.reply("Please use the channel ##{pashaState.prio1.channel.name} for all communication")
+                return msg.reply("Please use the channel <##{pashaState.prio1.channel.id}> for all communication")
             pashaState.prio1.status = status
             pashaState.prio1.time.lastStatus = new Date()
             robot.brain.set(constant.pashaStateKey,
