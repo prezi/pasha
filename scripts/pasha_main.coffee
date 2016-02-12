@@ -108,6 +108,8 @@ module.exports = (robot) ->
               util.slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id})
 
     invitePrio1RolesToPrio1SlackChannel = () ->
+    robot.error (err, res) ->
+        scribeLog "ERROR #{err} #{err.stack}"
         pashaState = util.getOrInitState(robot)
         return unless pashaState.prio1.channel?
         usersToInvite = [botName]

@@ -112,10 +112,11 @@ slackApi = (method, args, callback) ->
         url: "https://slack.com/api/#{method}",
         qs: args
     }, (err, res, body) ->
-        if err
-            callback?(err, res, body)
-        else
-            callback?(err, res, JSON.parse(body))
+        try
+            body = JSON.parse(body)
+        catch error
+            scribeLog "failed to parse Slack API response: #{error}. Body:\n#{body}"
+        callback?(err, res, body)
     )
 
 postToSlack = (channel, message) ->
@@ -232,7 +233,6 @@ module.exports = {
     sendConfirmEmail: sendConfirmEmail
     sendStatusEmail: sendStatusEmail
     pagerdutyAlert: pagerdutyAlert
-    startNag: startNag
     hasValue: hasValue
     slackApi: slackApi
 }
