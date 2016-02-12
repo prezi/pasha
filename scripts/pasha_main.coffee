@@ -196,14 +196,14 @@ module.exports = (robot) ->
 
         tenMinutes: () =>
             @loadState()
-            @remind 'comm', "Please provide an ETA and a simple status update.\nBad example: packet loss between data centers.\nGood example: network issues, it may be out of our control."
+            @remind 'comm', "Please provide an ETA and a simple status update with '#{botName} status ...'\nBad example: packet loss between data centers.\nGood example: network issues, it may be out of our control."
             # TODO: auto-assign marketing lead
             @remind 'support', "Ask for clarifications if needed. If the ETA is above 5 minutes, please alert marketing and start textual public communication. Work with @#{@state.prio1.role.comm} to make sure the communicated information is accurate."
             @tenMinuteIntervalId = setInterval(@everyTenMinutes, 10 * 60 * 1000)
 
         everyTenMinutes: () =>
             @loadState()
-            @remind 'comm', "Please provide an ETA and a simple status update."
+            @remind 'comm', "Please provide an ETA and a simple status update with '#{botName} status ...'"
             @remind 'support', "Ask for clarifications if needed. Work with marketing and @#{@state.prio1.role.comm} to provide a public update."
 
         stop: () =>
