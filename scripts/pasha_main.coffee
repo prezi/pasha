@@ -200,13 +200,26 @@ module.exports = (robot) ->
             # TODO: auto-assign marketing lead
             @remind 'support', "Ask for clarifications if needed. If the ETA is above 5 minutes, please alert marketing and start textual public communication. Work with @#{@state.prio1.role.comm} to make sure the communicated information is accurate."
             @tenMinuteIntervalId = setInterval(@everyTenMinutes, 10 * 60 * 1000)
+            @next @sixtyMinutes, 50
 
         everyTenMinutes: () =>
             @loadState()
             @remind 'comm', "Please provide an ETA and a simple status update with '#{botName} status ...'"
             @remind 'support', "Ask for clarifications if needed. Work with marketing and @#{@state.prio1.role.comm} to provide a public update."
 
+        sixtyMinutes: () =>
+            @loadState()
+            @remind 'marketing', "The prio1 has been going on for an hour. It's time to call a crisis communication meeting, prepare a reactive statement and messaging."
+            @next @twoHours, 60
+
+        twoHours: () =>
+            @loadState()
+            @remind 'marketing', "The prio1 has been going on for two hours. It's time to work with our Brand Communications director to alert HOX."
+
         stop: () =>
+            @loadState()
+            @remind 'support', 'If possible, please verify that the prio1 is over. If not possible, please acknowledge that you understand engineering believes the prio1 is over.'
+            @remind 'support', "Please work with @#{@state.prio.role.marketing} to update public communications channels, resolve the outstanding issue and update the green/yellow/red status on the status page. Ask @#{@state.prio1.role.comm} for clarifications as needed."
             clearTimeout @nextTimeoutId if @nextTimeoutId?
             clearInterval @tenMinuteIntervalId if @tenMinuteIntervalId?
 
