@@ -308,8 +308,8 @@ describe 'prio1 command', () ->
         pashaState.users = users
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         adapter.on 'send', (envelope, responseLines) ->
-            assert.equal(responseLines[0], 'comm role is now assigned to ' +
-                "Clint Eastwood, you can change it with " +
+            assert.equal(responseLines[0], 'Engineer point of contact is now ' +
+                "@Clint Eastwood, you can change it with " +
                 "'#{botName} role comm <name>'",
                 'should set comm role if there is a prio1')
             done()
@@ -325,8 +325,8 @@ describe 'prio1 command', () ->
         pashaState.users = users
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         adapter.on 'reply', (envelope, responseLines) ->
-            assert.equal(responseLines[0], 'you cannot set the comm role: ' +
-                'there is no prio1 going on',
+            assert.equal(responseLines[0],
+                'There\'s no prio1 in progress',
                 'should not set comm role if there is no prio1')
             done()
         adapter.receive(new TextMessage(user, "#{botName} role comm clint"))
@@ -358,8 +358,8 @@ describe 'prio1 command', () ->
         pashaState.users = users
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         adapter.on "send", (envelope, responseLines) ->
-            assert.equal(responseLines[0], "leader role is now assigned to " +
-                "Clint Eastwood, you can change it with " +
+            assert.equal(responseLines[0], "Engineer lead is now " +
+                "@Clint Eastwood, you can change it with " +
                 "'#{botName} role leader <name>'",
                 'should set comm role if there is a prio1')
             done()
@@ -376,8 +376,8 @@ describe 'prio1 command', () ->
         pashaState.users = users
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         adapter.on 'reply', (envelope, responseLines) ->
-            assert.equal(responseLines[0], 'you cannot set the leader role: ' +
-                'there is no prio1 going on',
+            assert.equal(responseLines[0],
+                'There\'s no prio1 in progress',
                 'should not set leader role if there is no prio1')
             done()
         adapter.receive(new TextMessage(user,

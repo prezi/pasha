@@ -33,11 +33,9 @@ prio1Confirm = /prio1 confirm$/i
 prio1Stop = /prio1 stop$/i
 roleHelp = /role$|role help$/i
 # role
-roles = /roles$/i
-roleComm = /role comm$/i
-roleCommParameters = /role comm (.+)/i
-roleLeader = /role leader$/i
-roleLeaderParameters = /role leader (.+)/i
+cmdRoles = /roles$/i
+cmdRole = /role (\w+)$/i
+cmdRoleParameters = /role (\w+) (.+)$/i
 # status
 statusHelp = /status help$/i
 statusParameters = /status (.+)/i
@@ -60,14 +58,12 @@ commands =
         prio1Stop
     ]
     roles: [
-        roles
+        cmdRoles,
     ]
     role: [
         roleHelp,
-        roleComm,
-        roleCommParameters,
-        roleLeader,
-        roleLeaderParameters
+        cmdRole,
+        cmdRoleParameters
     ]
     status: [
         statusHelp,
@@ -90,27 +86,17 @@ module.exports = (robot) ->
 
     invitePrio1RolesToPrio1SlackChannel = () ->
         pashaState = util.getOrInitState(robot)
-        inviteUsersToSlackChannel(pashaState.prio1.channel.id, [
-            pashaState.prio1.role.leader,
-            pashaState.prio1.role.confirmer,
-            pashaState.prio1.role.starter,
-            pashaState.prio1.role.comm
-        ])
-
-    registerModuleCommands(robot, commands)
+        return unless pashaState.prio1.channel?
+        usersToInvite = [botName]
+        for own role, name of pashaState.prio1.role when name?
+            usersToInvite.push name if usersToInvite.indexOf(name) == -1
+        inviteUsersToSlackChannel(pashaState.prio1.channel.id, usersToInvite)
 
     setUsers = (users) ->
         pashaState = util.getOrInitState(robot)
         pashaState.users = users
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         scribeLog "set #{users.length} users"
-
-    try
-        scribeLog 'initializing prio1 module'
-        if hasValue(constant.slackApiToken)
-            util.downloadUsers(constant.slackApiToken, setUsers)
-    catch error
-        scribeLog "ERROR initializing #{error}"
 
     relay = (message) ->
         scribeLog "relaying: #{message}"
@@ -122,9 +108,17 @@ module.exports = (robot) ->
             if constant.slackRelayChannels?.length > 0 && constant.slackApiToken
                 for channel in constant.slackRelayChannels
                     util.postToSlack(channel, message)
-                    scribeLog "sending #{message} to \##{channel}"
+                    scribeLog "sending #{message} to ##{channel}"
         catch error
             scribeLog "ERROR relay #{error}"
+
+    registerModuleCommands(robot, commands)
+    try
+        scribeLog 'initializing prio1 module'
+        if hasValue(constant.slackApiToken)
+            util.downloadUsers(constant.slackApiToken, setUsers)
+    catch error
+        scribeLog "ERROR initializing #{error}"
 
     robot.respond say, (msg) ->
         try
@@ -166,7 +160,6 @@ module.exports = (robot) ->
             "#{botName} graph help_from_main"))
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} summon help_from_main"))
-
 
     robot.respond prio1Help, (msg) ->
         response = "#{botName} prio1 start <problem>: initiate prio1 mode\n" +
@@ -269,17 +262,22 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
               "#{botName} changelog addsilent #{user} confirmed the prio1"))
 
-            channelName = "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
-            util.slackApi("channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
-                if !err && data.ok
-                    pashaState.prio1.channel = {id: data.channel.id, name: channelName}
-                    robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
-                    msg.send("Created channel ##{channelName}, please join and keep all prio1 communication there.")
-                    invitePrio1RolesToPrio1SlackChannel()
+            createChannel = (baseName, tryNum = 0) ->
+                if tryNum > 0
+                    channelName = "#{baseName}-#{tryNum}"
                 else
-                    msg.send("Failed to create channel #{channelName}: #{err || data.error}")
-
-            )
+                    channelName = baseName
+                util.slackApi "channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) ->
+                    if !err && data.ok
+                        pashaState.prio1.channel = {id: data.channel.id, name: channelName}
+                        robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
+                        msg.send("Created channel <##{data.channel.id}>, please join and keep all prio1 communication there.")
+                        invitePrio1RolesToPrio1SlackChannel()
+                    else
+                        msg.send("Failed to create channel #{channelName}: #{err || data.error}")
+                        if data?.error == 'name_taken'
+                            createChannel(baseName, tryNum + 1)
+            createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
 
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
@@ -295,6 +293,8 @@ module.exports = (robot) ->
                 scribeLog response
                 msg.reply "you #{response}"
                 return
+            if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
+                return msg.reply("Please use the channel <##{pashaState.prio1.channel.id}> for all communication")
             user = msg.message.user.name
             response = "#{user} stopped the prio1: #{prio1.title}"
             msg.send response
@@ -319,62 +319,53 @@ module.exports = (robot) ->
         catch error
             scribeLog "ERROR prio1Stop #{error}"
 
+    roleDescriptions =
+        starter: 'The one who reported the prio1'
+        confirmer: 'The one who confirmed the prio1'
+        leader: 'Engineer lead'
+        comm: 'Engineer point of contact'
+        support: 'Support lead'
+        marketing: 'Marketing lead'
+
+    assignableRoles = ['leader', 'comm', 'support', 'marketing']
+
     robot.respond roleHelp, (msg) ->
-        msg.send "#{botName} role leader <name>: " +
-            "assign prio1 leader role to a person\n" +
-            "#{botName} role comm <name>: " +
-            "assign prio1 communication officer role to a person"
+        pashaState = util.getOrInitState(robot)
+        return msg.reply("There's no prio1 in progress") unless pashaState.prio1?
+        rolesString = ("`#{role}` #{roleDescriptions[role]}" for role in assignableRoles).join('\n')
+        msg.send "*#{botName} role <role> <name>*: assign prio1 role to a person. Roles:\n#{rolesString}"
 
-    robot.respond roleComm, (msg) ->
-        msg.send "#{botName} role comm <name>: " +
-            "assign prio1 communication officer role to a person"
-
-    robot.respond roleCommParameters, (msg) ->
+    robot.respond cmdRoles, (msg) ->
         try
-            who = msg.match[1]
-            scribeLog "setting comm role to: #{who}"
             pashaState = util.getOrInitState(robot)
-            prio1 = pashaState.prio1
-            if not prio1?
-                response = 'cannot set the comm role: ' +
-                    'there is no prio1 going on'
-                scribeLog response
-                msg.reply "you #{response}"
-                return
-            user = util.getUser(who, msg.message.user.name, pashaState.users)
-            if not user?
-                response = "no such user: #{who}"
-                scribeLog response
-                msg.reply response
-                return
-            name = user.name
-            pashaState.prio1.role.comm = name
-            robot.brain.set(constant.pashaStateKey,
-                JSON.stringify(pashaState))
-            msg.send "comm role is now assigned to #{name}, " +
-                "you can change it with '#{botName} role comm <name>'"
-            scribeLog "#{msg.message.user.name} assigned comm role to #{name}"
-            robot.receive(new TextMessage(msg.message.user,
-                "#{botName} changelog addsilent #{msg.message.user.name} " +
-                "assigned comm role to #{name}"))
-            invitePrio1RolesToPrio1SlackChannel()
+            return msg.reply("There's no prio1 in progress") unless pashaState.prio1?
+            for role, roleDescription of roleDescriptions
+                username = pashaState.prio1.role[role]
+                if username
+                    msg.send("#{roleDescription} is @#{username}")
+                else
+                    msg.send("#{roleDescription} is not set")
         catch error
-            scribeLog "ERROR roleComm #{error} #{error.stack}"
+            scribeLog "ERROR cmdRoles #{error} #{error.stack}"
 
-    robot.respond roleLeader, (msg) ->
-        msg.send "#{botName} role leader <name>: " +
-            "assign prio1 leader role to a person"
+    robot.respond cmdRole, (msg) ->
+        pashaState = util.getOrInitState(robot)
+        return msg.reply("There's no prio1 in progress") unless pashaState.prio1?
+        role = msg.match[1]
+        msg.send "*#{botName} role #{role} <name>*: assign role `#{role}` to a person"
 
-    robot.respond roleLeaderParameters, (msg) ->
+    robot.respond cmdRoleParameters, (msg) ->
         try
-            who = msg.match[1]
-            scribeLog "setting leader role to: #{who}"
             pashaState = util.getOrInitState(robot)
+            role = msg.match[1]
+            who = msg.match[2]
+            return msg.reply("There's no prio1 in progress") unless pashaState.prio1?
+            if assignableRoles.indexOf(role) == -1
+                return msg.reply("Unknown role `#{role}`. The available roles: #{assignableRoles.join(', ')}")
+            if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
+                return msg.reply("Please use the channel <##{pashaState.prio1.channel.id}> for all communication")
+            scribeLog "setting #{role} role to: #{who}"
             prio1 = pashaState.prio1
-            if not prio1?
-                msg.reply 'you cannot set the leader role: ' +
-                    'there is no prio1 going on'
-                return
             user = util.getUser(who, msg.message.user.name, pashaState.users)
             if not user?
                 response = "no such user: #{who}"
@@ -382,31 +373,17 @@ module.exports = (robot) ->
                 msg.reply response
                 return
             name = user.name
-            pashaState.prio1.role.leader = name
-            robot.brain.set(constant.pashaStateKey,
-                JSON.stringify(pashaState))
-            msg.send "leader role is now assigned to #{name}, " +
-                "you can change it with '#{botName} role leader <name>'"
-            scribeLog "#{msg.message.user.name} assigned leader role to " +
-                "#{name}"
+            pashaState.prio1.role[role] = name
+            robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
+            msg.send "#{roleDescriptions[role]} is now @#{name}, " +
+                "you can change it with '#{botName} role #{role} <name>'"
+            scribeLog "#{msg.message.user.name} assigned #{role} role to #{name}"
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
-                " assigned leader role to #{name}"))
+                " assigned #{role} role to #{name}"))
             invitePrio1RolesToPrio1SlackChannel()
         catch error
-            scribeLog "ERROR roleLeader #{error}"
-
-    robot.respond roles, (msg) ->
-        try
-            pashaState = util.getOrInitState(robot)
-            prio1 = pashaState.prio1
-            if not prio1?
-                msg.reply("There's no prio1 in progress")
-            else
-                for role, username of pashaState.prio1.role
-                    msg.send("#{role}: #{username}")
-        catch error
-            scribeLog "ERROR roles #{error}"
+            scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
     robot.respond statusHelp, (msg) ->
         msg.send "#{botName} status: " +
@@ -448,6 +425,8 @@ module.exports = (robot) ->
                 scribeLog response
                 msg.reply response
                 return
+            if pashaState.prio1.channel.name? && msg.envelope.room != pashaState.prio1.channel.name
+                return msg.reply("Please use the channel <##{pashaState.prio1.channel.id}> for all communication")
             pashaState.prio1.status = status
             pashaState.prio1.time.lastStatus = new Date()
             robot.brain.set(constant.pashaStateKey,

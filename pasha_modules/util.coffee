@@ -218,11 +218,11 @@ pagerdutyAlert = (description) ->
 
 
 startNag = (adapter, msg) ->
-    state = getOrInitState(adapter)
-    prio1 = state.prio1
     naggerCallbackId = null
     nagger = () ->
-        if (not getOrInitState(adapter).prio1?)
+        state = getOrInitState(adapter)
+        prio1 = state.prio1
+        if not prio1?
             if (not naggerCallbackId?)
                 scribeLog "nagger callback shouldn't be called but it was"
                 return
@@ -231,7 +231,11 @@ startNag = (adapter, msg) ->
             return
         try
             nagTarget = if prio1.role.comm then prio1.role.comm else prio1.role.starter
-            msg.send "@#{getUser(nagTarget, null, state.users).name}, please use '#{constant.botName} status <some status update>' regularly, the last status update for the current outage was at #{moment.unix(prio1.time.lastStatus).fromNow()}"
+            message = "@#{getUser(nagTarget, null, state.users).name}, please use '#{constant.botName} status <some status update>' regularly, the last status update for the current outage was at #{moment.unix(prio1.time.lastStatus).fromNow()}"
+            if prio1.channel.name?
+                adapter.messageRoom prio1.channel.name, message
+            else
+                msg.send message
         catch error
             scribeLog "ERROR nagger #{error}"
     naggerCallbackId = setInterval(nagger, 10 * 60 * 1000)
