@@ -32,6 +32,7 @@
     "hubot-reload-scripts": "^0.1.2",
     "hubot-scripts": "2.5.15",
     "hubot-slack": "3.4.1",
+    "lodash": "^4.3.0",
     "moment": "2.8.3",
     "nodemailer": "1.2.2",
     "path": "0.11.14",
