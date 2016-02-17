@@ -21,6 +21,7 @@
     "url": "https://github.com/github/hubot.git"
   },
   "dependencies": {
+    "async": "^1.5.2",
     "coffee-script": "1.8.0",
     "coffeelint": "1.6.1",
     "dateformat": "^1.0.12",
@@ -31,6 +32,7 @@
     "hubot-reload-scripts": "^0.1.2",
     "hubot-scripts": "2.5.15",
     "hubot-slack": "3.4.1",
+    "lodash": "^4.3.0",
     "moment": "2.8.3",
     "nodemailer": "1.2.2",
     "path": "0.11.14",

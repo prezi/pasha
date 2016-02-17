@@ -19,20 +19,15 @@ class Prio1
             start: startedTimestamp
             confirm: null
             lastStatus: startedTimestamp
-            recoveryEta: null
         }
         @status = status
         @role = {
             starter: starter
             confirmer: null
             leader: starter
-            comm: null
+            comm: starter
         }
-        @counter = {
-            commUnsetMinutes: 0
-            statusUnsetMinutes: 0
-            revoceryEtaUnsetMinutes: 0
-        }
+        @workflow = {}
         @url = {
             hangout: null
         }
