@@ -245,10 +245,10 @@ module.exports = (robot) ->
             if not u?
                 msg.reply "no such user: #{who}"
             else
-                msg.send "Full Name: #{u.name}\n" +
-                         "Title: #{u.title}"
+                msg.send "Full Name: #{u.profile.real_name}\n" +
+                         "Username: @#{u.name}"
                 robot.receive(new TextMessage(msg.message.user,
-                  "#{botName} phone #{u.email}"))
+                  "#{botName} phone #{u.profile.email}"))
         catch error
             scribeLog "ERROR whois #{error}"
 
