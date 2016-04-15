@@ -104,7 +104,9 @@ describe 'command registration', () ->
         sinon = require('sinon')
         util = require('../pasha_modules/util')
         fakeUser = {
-            email: "test@example.com"
+            profile: {
+                email: "test@example.com"
+            }
         }
         getUserStub = sinon.stub().returns(fakeUser)
         util.getUser = getUserStub

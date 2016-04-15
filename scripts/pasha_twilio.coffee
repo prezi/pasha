@@ -122,7 +122,7 @@ summonByName = (msg, robot) ->
         pashaState = util.getOrInitState(robot)
         u = util.getUser(name, msg.message.user.name, pashaState.users)
         if u
-          pagerduty.phone(u.email, (numbers) ->
+          pagerduty.phone(u.profile.email, (numbers) ->
               for number in numbers
                   phoneNumber = standardizePhoneNumber(number)
 
