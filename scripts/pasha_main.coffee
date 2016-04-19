@@ -219,9 +219,15 @@ module.exports = (robot) ->
         stop: () =>
             @loadState()
             @remind 'support', 'If possible, please verify that the prio1 is over. If not possible, please acknowledge that you understand engineering believes the prio1 is over.'
-            @remind 'support', "Please work with @#{@state.prio1.role.marketing} to update public communications channels, resolve the outstanding issue and update the green/yellow/red status on the status page. Ask @#{@state.prio1.role.comm} for clarifications as needed."
-            clearTimeout @nextTimeoutId if @nextTimeoutId?
+            @remind 'support', "Please work with @#{@state.prio1.role.marketing}
+            to update public communications channels, set the outstanding issue to \"monitoring\" and update the green/yellow/red status on the status page. Ask @#{@state.prio1.role.comm} for clarifications as needed."
+            @next @resolve, 60 * 24
             clearInterval @tenMinuteIntervalId if @tenMinuteIntervalId?
+
+        resolve: () =>
+            @loadState()
+            @remind 'support', 'The issue has been fixed for 24 hours, please resolve it on the public status page (currently it shuold be in "monitoring").'
+            clearTimeout @nextTimeoutId if @nextTimeoutId?
 
     registerModuleCommands(robot, commands)
     try
