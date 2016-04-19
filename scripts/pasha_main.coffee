@@ -219,7 +219,7 @@ module.exports = (robot) ->
         stop: () =>
             @loadState()
             @remind 'support', 'If possible, please verify that the prio1 is over. If not possible, please acknowledge that you understand engineering believes the prio1 is over.'
-            @remind 'support', "Please work with @#{@state.prio.role.marketing} to update public communications channels, resolve the outstanding issue and update the green/yellow/red status on the status page. Ask @#{@state.prio1.role.comm} for clarifications as needed."
+            @remind 'support', "Please work with @#{@state.prio1.role.marketing} to update public communications channels, resolve the outstanding issue and update the green/yellow/red status on the status page. Ask @#{@state.prio1.role.comm} for clarifications as needed."
             clearTimeout @nextTimeoutId if @nextTimeoutId?
             clearInterval @tenMinuteIntervalId if @tenMinuteIntervalId?
 
