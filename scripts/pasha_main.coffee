@@ -310,7 +310,7 @@ module.exports = (robot) ->
                 response += "\n#{playbookInfo}"
             msg.send response
             prio1Room = constant.prio1Room
-            if prio1Room?
+            if prio1Room
                 relay "#{user} started a prio1: #{status}. " +
                     "you can confirm it by joining the '#{prio1Room}' room " +
                     "and saying '#{botName} prio1 confirm'"
