@@ -178,16 +178,18 @@ module.exports = (robot) ->
                             @welcome()
                             @next @fiveMinutes, 5
                         )
+                        util.setSlackChannelTopic(@state.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
                     else
                         channelName="julitestprio1channel"
                         @state.prio1.channel = {id: constant.testPrio1Channel, name: channelName}
                         @saveState()
+                        util.setSlackChannelTopic(@state.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
                         scribeLog "failed to create channel #{channelName}"
                         @confirmMsg.send("Failed to create channel #{channelName}: #{err || data.error}")
                         if data?.error == 'name_taken'
                             createChannel(baseName, tryNum + 1)
             # TODO: on other errors, default to #developers
-            #createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
+            createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
 
         fiveMinutes: () =>
             @loadState()
@@ -376,7 +378,6 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
-            util.setSlackChannelTopic(pashaState.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
