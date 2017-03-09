@@ -373,6 +373,7 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
+            utils.setSlackChannelTopic(pashaState.prio1.channel.id, "Hangout: " + contant.hangoutUrl)
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
