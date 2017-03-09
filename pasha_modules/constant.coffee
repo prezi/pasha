@@ -13,7 +13,6 @@ module.exports = {
         slackApiNonbotToken: process.env.HUBOT_SLACK_NONBOT_TOKEN || ''
         slackRelayChannels: (process.env.SLACK_RELAY_CHANNELS || '').split(',')
             .filter (x) -> x.trim().length > 0
-        testPrio1Channel: process.env.TEST_PRIO1_CHANNEL
         hangoutUrl: process.env.HANGOUT_URL || ''
 
         httpBasicAuthUser: process.env.HTTP_BASIC_AUTH_USER || ''

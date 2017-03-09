@@ -179,11 +179,8 @@ module.exports = (robot) ->
                             @next @fiveMinutes, 5
                         )
                         util.setSlackChannelTopic(@state.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
+                        relay "Prio1 channel opened <##{@state.prio1.channel.id}>" 
                     else
-                        channelName="julitestprio1channel"
-                        @state.prio1.channel = {id: constant.testPrio1Channel, name: channelName}
-                        @saveState()
-                        util.setSlackChannelTopic(@state.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
                         scribeLog "failed to create channel #{channelName}"
                         @confirmMsg.send("Failed to create channel #{channelName}: #{err || data.error}")
                         if data?.error == 'name_taken'
@@ -372,7 +369,7 @@ module.exports = (robot) ->
             msg.send "#{user} confirmed the prio1\n" +
                 "the leader of the prio1 is #{pashaState.prio1.role.leader}" +
                 ", you can change it with '#{botName} role leader <name>'"
-            relay "#{user} confirmed the prio1"+"\n Prio1 channel opened: " +pashaState.prio1.channel.name
+            relay "#{user} confirmed the prio1"
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{user} confirmed the prio1"))
             scribeLog "confirmed prio1"
@@ -538,7 +535,7 @@ module.exports = (robot) ->
                 JSON.stringify(pashaState))
             msg.reply msg.random util.ack
             response = "#{msg.message.user.name} set status to #{status}"
-            relay response + "\n prio1 channel: " + pashaState.prio1.channel.name
+            relay response + "\n prio1 channel: <##{pashaState.prio1.channel.id}>"
             util.sendStatusEmail(prio1)
             scribeLog response
             robot.receive(new TextMessage(msg.message.user,
