@@ -50,8 +50,6 @@ whois = /whois (.+)/i
 help = /$| help$/i
 # healthcheck
 healthcheckCore = /healthcheck/i
-julitestStart = /julitest start/i
-julitestStop = /julitest stop/i
 
 commands =
     prio1: [
@@ -78,10 +76,6 @@ commands =
     whois: [whois]
     help: [help]
     healthcheck: [healthcheckCore]
-    julitest: [
-          julitestStart,
-          julitestStop
-      ]
 
 
 module.exports = (robot) ->
@@ -379,10 +373,7 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
-            util.slackApi("channels.info", {channel:prio1.channel.id, token:constant.slackApiToken}, (e, r, b) =>
-              topic = b.channel.topic.value
-              robot.brain.set(channel+"_topic", topic)
-              util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:"Hangout: "+constant.hangoutUrl})
+            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:"Hangout: "+constant.hangoutUrl})
             )
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
