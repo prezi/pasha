@@ -150,6 +150,8 @@ generatePrio1Description = (prio1) ->
         Outage '#{prio1.title}'
         #{generatePrio1Status(prio1)}
     """
+setSlackChannelTopic = (channel, topic) ->
+    slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:topic})
 
 generatePrio1Status = (prio1) ->
     detectTime = moment.unix(prio1.time.start)
