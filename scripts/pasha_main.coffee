@@ -258,26 +258,6 @@ module.exports = (robot) ->
         catch error
             scribeLog "ERROR whois #{error}"
 
-    robot.respond julitestStart, (msg) ->
-      msg.send "alma"
-      #util.slackApi("channels.setTopic", {chanllel:, topic: "new topic"})
-
-      for channel in constant.slackRelayChannels
-        # get old topic
-        # save old topic to brain
-        # set new topic
-        util.slackApi("channels.info", {channel:channel, token:constant.slackApiToken}, (e, r, b) =>
-          topic = b.channel.topic.value
-          robot.brain.set(channel+"_topic", topic)
-          util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:"julis new topic"})
-        )
-
-
-    robot.respond julitestStop, (msg) ->
-      msg.send "korte"
-      for channel in constant.slackRelayChannels
-         util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:robot.brain.get(channel+"_topic")})
-
     robot.respond help, (msg) ->
         msg.send "#{botName} prio1 <subcommand>: " +
             "manage prio1, see '#{botName} prio1 help' for details\n" +
@@ -399,6 +379,11 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
+            util.slackApi("channels.info", {channel:prio1.channel.id, token:constant.slackApiToken}, (e, r, b) =>
+              topic = b.channel.topic.value
+              robot.brain.set(channel+"_topic", topic)
+              util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:"Hangout: "+constant.hangoutUrl})
+            )
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
@@ -436,6 +421,7 @@ module.exports = (robot) ->
             activeWorkflow?.stop()
             robot.brain.set(constant.pashaStateKey,
                 JSON.stringify(pashaState))
+            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:robot.brain.get(channel+"_topic")})
             scribeLog 'stopped prio1'
         catch error
             scribeLog "ERROR prio1Stop #{error}"
@@ -508,6 +494,7 @@ module.exports = (robot) ->
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned #{role} role to #{name}"))
             invitePrio1RolesToPrio1SlackChannel()
+            util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:describeCurrentroles() + "Hangout: "+constant.hangoutUrl})
         catch error
             scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
