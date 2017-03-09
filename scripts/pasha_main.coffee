@@ -373,8 +373,7 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
-            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:"Hangout: "+constant.hangoutUrl})
-            )
+            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:"Hangout: "+constant.hangoutUrl}))
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
@@ -412,7 +411,6 @@ module.exports = (robot) ->
             activeWorkflow?.stop()
             robot.brain.set(constant.pashaStateKey,
                 JSON.stringify(pashaState))
-            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:robot.brain.get(channel+"_topic")})
             scribeLog 'stopped prio1'
         catch error
             scribeLog "ERROR prio1Stop #{error}"
