@@ -483,7 +483,6 @@ module.exports = (robot) ->
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned #{role} role to #{name}"))
             invitePrio1RolesToPrio1SlackChannel()
-            util.setSclackChannelTopic(pashaState.prio1.channel.id, describeCurrentRoles() + "Hangout: " + contant.hangoutUrl)
         catch error
             scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
