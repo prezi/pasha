@@ -50,6 +50,8 @@ whois = /whois (.+)/i
 help = /$| help$/i
 # healthcheck
 healthcheckCore = /healthcheck/i
+julitestStart = /julitest start/i
+julitestStop = /julitest stop/i
 
 commands =
     prio1: [
@@ -76,6 +78,10 @@ commands =
     whois: [whois]
     help: [help]
     healthcheck: [healthcheckCore]
+    julitest: [
+          julitestStart,
+          julitestStop
+      ]
 
 
 module.exports = (robot) ->
@@ -251,6 +257,26 @@ module.exports = (robot) ->
                   "#{botName} phone #{u.profile.email}"))
         catch error
             scribeLog "ERROR whois #{error}"
+
+    robot.respond julitestStart, (msg) ->
+      msg.send "alma"
+      #util.slackApi("channels.setTopic", {chanllel:, topic: "new topic"})
+
+      for channel in constant.slackRelayChannels
+        # get old topic
+        # save old topic to brain
+        # set new topic
+        util.slackApi("channels.info", {channel:channel, token:constant.slackApiToken}, (e, r, b) =>
+          topic = b.channel.topic.value
+          robot.brain.set(channel+"_topic", topic)
+          util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:"julis new topic"})
+        )
+
+
+    robot.respond julitestStop, (msg) ->
+      msg.send "korte"
+      for channel in constant.slackRelayChannels
+         util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:robot.brain.get(channel+"_topic")})
 
     robot.respond help, (msg) ->
         msg.send "#{botName} prio1 <subcommand>: " +
