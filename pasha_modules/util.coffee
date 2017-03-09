@@ -153,7 +153,7 @@ generatePrio1Description = (prio1) ->
 
 setSlackChannelTopic = (channel, topic) ->
     slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:topic}, cb = (e,r,b) ->
-          scribeLog "slack response: #{r}"
+          scribeLog "slack response: #{JSON.stringify(b)}"
     )
 
 generatePrio1Status = (prio1) ->
