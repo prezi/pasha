@@ -373,7 +373,7 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
-            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:"Hangout: "+constant.hangoutUrl}))
+            util.slackApi("channels.setTopic", {channel:prio1.channel.id, token:constant.slackApiToken, topic:"Hangout: " + constant.hangoutUrl})
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
@@ -483,7 +483,7 @@ module.exports = (robot) ->
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned #{role} role to #{name}"))
             invitePrio1RolesToPrio1SlackChannel()
-            util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:describeCurrentroles() + "Hangout: "+constant.hangoutUrl})
+            util.slackApi("channels.setTopic", {channel:channel, token:constant.slackApiToken, topic:describeCurrentroles() + "Hangout: " + constant.hangoutUrl})
         catch error
             scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
