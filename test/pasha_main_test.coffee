@@ -564,6 +564,59 @@ describe 'prio1 command', () ->
             done()
         adapter.receive(new TextMessage(user, "#{botName} status foo"))
 
+describe 'listContacts', () ->
+    robot = null
+    user = null
+    adapter = null
+
+    beforeEach (done) ->
+        robot = new Robot(null, 'mock-adapter', false, botName)
+        robot.adapter.on 'connected', ->
+            process.env.HUBOT_AUTH_ADMIN = '1'
+            robot.loadFile(
+                path.resolve(
+                    path.join("node_modules/hubot-scripts/src/scripts")
+                ),
+                'auth.coffee'
+            )
+            pashaMain robot
+            user = robot.brain.userForId('1', {
+                name: "mocha"
+                room: "#mocha"
+                })
+            adapter = robot.adapter
+            done()
+        pashaState=new State()
+        pashaState.emergencyContacts = {
+          legal: ['misty', 'doug'],
+          infra: ['abesto', 'tkornai'],
+          backend: ['dtorok']
+          }
+
+        robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
+        robot.run()
+
+    afterEach ->
+        robot.shutdown()
+
+
+    it 'should list contacts', (done)->
+        expected ="Emergency Contacts: "
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, expected)
+            done()
+        adapter.receive(new TextMessage(user, "#{botName} contacts"))
+
+#decribe 'contact add', ->
+#    it 'add contact to empty role', (role, contact) ->
+#    it 'add contact to existing role', (role, contact) ->
+#describe 'contact remove', ->
+#    it 'shouldn\'t remove contact from role it is not in', (role, contact) ->
+#    it 'shouldn\'t remove contact from nonexisting role', (role, contact) ->
+#    it 'remove last contact from existing role', (role, contact) ->
+#    it 'remove contact from existing role, if not last in that role', (role, contact) ->
+
 describe 'prio1 reminder', ->
     robot = null
     user = null

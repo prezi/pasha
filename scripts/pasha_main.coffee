@@ -529,7 +529,7 @@ module.exports = (robot) ->
             ec = pashaState.emergencyContacts
             response = ''
             for key of ec
-              response += "#{key}: @"+ ec[key].join(", @")
+              response += "#{key}: @" + ec[key].join(", @")+"\n"
             return response
         catch error
           scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
