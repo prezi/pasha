@@ -503,26 +503,6 @@ module.exports = (robot) ->
     robot.respond contactHelp, (msg) ->
         msg.send "Use \"contact add|remove contactRole name\" to add or remove Emergency Contacts"
 
-    robot.respond setEmergencyContact, (msg) ->
-        try
-            pashaState = util.getOrInitState(robot)
-            contactRole = msg.match[1]
-            who = msg.match[2]
-
-            ec = pashaState.emergencyContacts
-
-            if not ec[contactRole]?
-                ec[contactRole]=[]
-
-            if who[0]=="@"
-              who=who.substr(1)
-
-            ec[contactRole].push(who)
-            util.saveState(robot, pashaState)
-
-            msg.send "@#{who} is now added to Emergency Contacts as #{contactRole}."
-        catch error
-          scribeLog "ERROR couldnt set emergency contact #{error} #{error.stack}"
     generateEmergencyContactList = () ->
         try
             pashaState = util.getOrInitState(robot)
@@ -533,6 +513,27 @@ module.exports = (robot) ->
             return response
         catch error
           scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
+
+    robot.respond setEmergencyContact, (msg) ->
+        try
+            pashaState = util.getOrInitState(robot)
+            contactRole = msg.match[1]
+            who = msg.match[2]
+
+            ec = pashaState.emergencyContacts
+
+            if who[0]=="@"
+              who=who.substr(1)
+
+            if not ec[contactRole]?
+                ec[contactRole]=[]
+
+            ec[contactRole].push(who)
+            util.saveState(robot, pashaState)
+
+            msg.send "@#{who} is now added to Emergency Contacts as #{contactRole}."
+        catch error
+          scribeLog "ERROR couldnt set emergency contact #{error} #{error.stack}"
 
     robot.respond listEmergencyContacts, (msg) ->
         try
@@ -550,7 +551,7 @@ module.exports = (robot) ->
             if who[0]=="@"
               who=who.substr(1)
 
-            if not ec.hasOwnProperty(contactRole)
+            if not ec["#{contactRole}"]?
               msg.send "There arent any contacts for #{contactRole}"
               return
 
@@ -562,9 +563,9 @@ module.exports = (robot) ->
                 else
                     pashaState.emergencyContacts[contactRole] = roleContacts
                 util.saveState(robot,pashaState)
-                msg.send "Removed #{who} from the list of #{contactRole} emergency contacts"
+                msg.send "Removed @#{who} from the list of #{contactRole} emergency contacts"
             else
-                msg.send "#{who} wasn't even in the list of #{contactRole} contacts"
+                msg.send "@#{who} wasn't even in the list of #{contactRole} contacts"
         catch error
             scribeLog "ERROR couldnt set emergency contact #{error} #{error.stack}"
 

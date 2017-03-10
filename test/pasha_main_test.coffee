@@ -564,11 +564,11 @@ describe 'prio1 command', () ->
             done()
         adapter.receive(new TextMessage(user, "#{botName} status foo"))
 
-describe 'listContacts', () ->
+describe 'emergencyContacts', () ->
     robot = null
     user = null
     adapter = null
-
+    pashaState = null
     beforeEach (done) ->
         robot = new Robot(null, 'mock-adapter', false, botName)
         robot.adapter.on 'connected', ->
@@ -592,7 +592,6 @@ describe 'listContacts', () ->
           infra: ['abesto', 'tkornai'],
           backend: ['dtorok']
           }
-
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         robot.run()
 
@@ -600,7 +599,7 @@ describe 'listContacts', () ->
         robot.shutdown()
 
 
-    it 'should list contacts', (done)->
+    it 'should list contacts', (done) ->
         expected ="Emergency Contacts: "
         adapter.on 'send', (envelope, responseLines) ->
             firstLine=responseLines[0].split("\n")[0]
@@ -608,14 +607,73 @@ describe 'listContacts', () ->
             done()
         adapter.receive(new TextMessage(user, "#{botName} contacts"))
 
-#decribe 'contact add', ->
-#    it 'add contact to empty role', (role, contact) ->
-#    it 'add contact to existing role', (role, contact) ->
-#describe 'contact remove', ->
-#    it 'shouldn\'t remove contact from role it is not in', (role, contact) ->
-#    it 'shouldn\'t remove contact from nonexisting role', (role, contact) ->
-#    it 'remove last contact from existing role', (role, contact) ->
-#    it 'remove contact from existing role, if not last in that role', (role, contact) ->
+    it 'should add contact to empty role', (done) ->
+        [role, who] = ['testRole', 'testWho']
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, "@#{who} is now added to Emergency Contacts as #{role}.")
+            done()
+        adapter.receive(new TextMessage(user, "#{botName} contact add #{role} #{who}"))
+        pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
+        assert(pashaState.emergencyContacts?)
+        assert(pashaState.emergencyContacts[role]?)
+        assert.equal(pashaState.emergencyContacts[role], who)
+
+    it 'should add contact to existing role', (done) ->
+        [role, who] = ['infra', 'testWho']
+        adapter.receive(new TextMessage(user, "#{botName} contact add #{role} #{who}"))
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, "@#{who} is now added to Emergency Contacts as #{role}.")
+            done()
+        pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
+        assert(pashaState.emergencyContacts?)
+        assert(pashaState.emergencyContacts[role]?)
+        assert.equal(pashaState.emergencyContacts[role].length, 3)
+        assert.equal(pashaState.emergencyContacts[role], "abesto,tkornai,#{who}")
+
+    it 'shouldn\'t remove contact from role it is not in', (done) ->
+        [role, who] = ['legal', 'tkornai']
+        adapter.receive(new TextMessage(user, "#{botName} contact remove #{role} #{who}"))
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, "@#{who} wasn't even in the list of #{role} contacts")
+            done()
+        pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
+        assert.equal(pashaState.emergencyContacts[role].length, 2)
+        assert.equal(pashaState.emergencyContacts[role].toString(), "misty,doug")
+
+    it 'shouldn\'t remove contact from nonexisting role', (done) ->
+        [role, who] = ['testRole', 'tkornai']
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, "There arent any contacts for #{role}")
+            done()
+        adapter.receive(new TextMessage(user, "#{botName} contact remove #{role} #{who}"))
+        pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
+        assert.equal(pashaState.emergencyContacts['infra'].length, 2)
+        assert.equal(pashaState.emergencyContacts['infra'].toString(), "abesto,tkornai")
+
+    it 'should remove last contact from existing role', (done) ->
+        [role, who] = ['backend', 'dtorok']
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, "Removed @#{who} from the list of #{role} emergency contacts")
+            done()
+        adapter.receive(new TextMessage(user, "#{botName} contact remove #{role} #{who}"))
+        pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
+        assert(not pashaState.emergencyContacts[role]?)
+
+    it 'should remove contact from existing role, if not last in that role', (done) ->
+        [role, who] = ['infra', 'tkornai']
+        adapter.on 'send', (envelope, responseLines) ->
+            firstLine=responseLines[0].split("\n")[0]
+            assert.equal(firstLine, "Removed @#{who} from the list of #{role} emergency contacts")
+            done()
+        adapter.receive(new TextMessage(user, "#{botName} contact remove #{role} #{who}"))
+        pashaState = JSON.parse(robot.brain.get(constant.pashaStateKey))
+        assert.equal(pashaState.emergencyContacts['infra'].length, 1)
+        assert.equal(pashaState.emergencyContacts[role].toString(), "abesto")
 
 describe 'prio1 reminder', ->
     robot = null
