@@ -1,12 +1,15 @@
+_ = require('lodash')
 scribeLog = require('../pasha_modules/scribe_log').scribeLog
 https = require('https')
 http = require('http')
+async = require('async')
 qs = require('querystring')
 constant = require('../pasha_modules/constant').constant
 State = require('../pasha_modules/model').State
 nodemailer = require "nodemailer"
 moment = require('moment')
 request = require('request')
+botName = constant.botName
 
 ack = ['roger', 'roger that', 'affirmative', 'ack', 'consider it done', 'done', 'aye captain']
 
@@ -223,6 +226,38 @@ pagerdutyAlert = (description) ->
         scribeLog "ERROR pagerdutyAlert #{error}"
 
 
+inviteUsersToSlackChannel = (channel, userPool, userNames, cb) ->
+    users = _.filter(getUser(name, null, userPool) for name in userNames)
+    invite = (user) -> (cb) ->
+        slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channel.id, user: user.id}, cb)
+    async.parallel(
+        (invite(user) for user in users),
+        cb
+    )
+
+invitePrio1RolesToPrio1SlackChannel = (pashaState, cb) ->
+    return unless pashaState.prio1.channel?
+    usersToInvite = [botName]
+    for own role, name of pashaState.prio1.role when name?
+        usersToInvite.push name if usersToInvite.indexOf(name) == -1
+    if pashaState.users
+        inviteUsersToSlackChannel(pashaState.prio1.channel, pashaState.users, usersToInvite, cb)
+    else
+      scribeLog "No users in pashaState"
+
+describeCurrentRoles = (roleDescriptions) ->
+        pashaState = getOrInitState(robot)
+        return "There's no prio1 in progress" unless pashaState.prio1?
+        lines = []
+        for role, roleDescription of roleDescriptions
+            username = pashaState.prio1.role[role]
+            if username
+                lines.push "#{roleDescription} is @#{username}"
+            else
+                lines.push "#{roleDescription} is not set"
+        return lines.join("\n")
+
+
 hasValue = (str) ->
     str? and str
 
@@ -241,4 +276,5 @@ module.exports = {
     hasValue: hasValue
     slackApi: slackApi
     setSlackChannelTopic: setSlackChannelTopic
+    invitePrio1RolesToPrio1SlackChannel: invitePrio1RolesToPrio1SlackChannel
 }
