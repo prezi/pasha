@@ -178,6 +178,8 @@ module.exports = (robot) ->
                             @welcome()
                             @next @fiveMinutes, 5
                         )
+                        util.setSlackChannelTopic(@state.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
+                        relay "Prio1 channel opened <##{@state.prio1.channel.id}>" 
                     else
                         scribeLog "failed to create channel #{channelName}"
                         @confirmMsg.send("Failed to create channel #{channelName}: #{err || data.error}")
@@ -373,7 +375,6 @@ module.exports = (robot) ->
             scribeLog "confirmed prio1"
             activeWorkflow = new Workflow(robot, msg)
             activeWorkflow.start()
-            util.setSlackChannelTopic(pashaState.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
         catch error
             scribeLog "ERROR prio1Confirm #{error} #{error.stack}"
 
@@ -534,7 +535,7 @@ module.exports = (robot) ->
                 JSON.stringify(pashaState))
             msg.reply msg.random util.ack
             response = "#{msg.message.user.name} set status to #{status}"
-            relay response
+            relay response + "\n prio1 channel: <##{pashaState.prio1.channel.id}>"
             util.sendStatusEmail(prio1)
             scribeLog response
             robot.receive(new TextMessage(msg.message.user,
