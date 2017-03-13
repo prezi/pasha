@@ -1,0 +1,45 @@
+version: "2"
+
+services:
+  pasha:
+    build: .
+    links:
+      - redis-server:redis-server
+      - rocket-chat:rocket-chat
+    env_file: .envfile
+    environment:
+      BOT_NAME: pasha
+
+      ROCKETCHAT_URL: rocket-chat:3000
+      ROCKETCHAT_ROOM: GENERAL
+      ROCKETCHAT_USER: pasha
+      ROCKETCHAT_PASSWORD: pasha
+      LISTEN_ON_ALL_PUBLIC: "true"
+      RESPOND_TO_DM: "true"
+
+      HUBOT_LOG_LEVEL: debug
+      REDIS_URL: redis://redis-server:6379/pasha
+    volumes:
+      - .:/opt/pasha
+    privileged: true
+    command: |
+      /usr/local/bin/supervisor --no-restart-on exit -w . -e coffee \
+          -x ./node_modules/.bin/coffee -- ./node_modules/.bin/hubot --adapter rocketchat
+
+  redis-server:
+    image: redis
+
+  rocket-chat:
+    image: rocket.chat
+    links:
+      - mongo:db
+    ports:
+      - "3000:3000"
+
+  mongo:
+    image: mongo
+
+  mongo-seed:
+    build: ./dev/mongo-seed
+    links:
+      - mongo:db
