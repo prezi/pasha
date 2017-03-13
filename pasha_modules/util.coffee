@@ -1,12 +1,15 @@
-scribeLog = require('../pasha_modules/scribe_log').scribeLog
-https = require('https')
-http = require('http')
-qs = require('querystring')
-constant = require('../pasha_modules/constant').constant
-State = require('../pasha_modules/model').State
-nodemailer = require "nodemailer"
-moment = require('moment')
-request = require('request')
+{constant, roleDescriptions} = require '../pasha_modules/constant'
+
+_           = require 'lodash'
+async       = require 'async'
+{scribeLog} = require '../pasha_modules/scribe_log'
+https       = require 'https'
+http        = require 'http'
+qs          = require 'querystring'
+{State}     = require '../pasha_modules/model'
+nodemailer  = require "nodemailer"
+moment      = require 'moment'
+request     = require 'request'
 
 ack = ['roger', 'roger that', 'affirmative', 'ack', 'consider it done', 'done', 'aye captain']
 
@@ -159,9 +162,9 @@ relay = (message) ->
     catch error
         scribeLog "ERROR relay #{error}"
 
-inviteUsersToSlackChannel = (channelId, userNames, cb) ->
-    pashaState = util.getOrInitState(robot)
-    users = _.filter(util.getUser(name, null, pashaState.users) for name in userNames)
+inviteUsersToSlackChannel = (robot, channelId, userNames, cb) ->
+    pashaState = getOrInitState(robot)
+    users = _.filter(getUser(name, null, pashaState.users) for name in userNames)
     invite = (user) -> (cb) ->
         slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id}, cb)
     async.parallel(
@@ -169,13 +172,13 @@ inviteUsersToSlackChannel = (channelId, userNames, cb) ->
         cb
     )
 
-invitePrio1RolesToPrio1SlackChannel = (cb) ->
-    pashaState = util.getOrInitState(robot)
+invitePrio1RolesToPrio1SlackChannel = (robot, cb) ->
+    pashaState = getOrInitState(robot)
     return unless pashaState.prio1.channel?
-    usersToInvite = [botName]
+    usersToInvite = [constant.botName]
     for own role, name of pashaState.prio1.role when name?
         usersToInvite.push name if usersToInvite.indexOf(name) == -1
-    inviteUsersToSlackChannel(pashaState.prio1.channel.id, usersToInvite, cb)
+    inviteUsersToSlackChannel(robot, pashaState.prio1.channel.id, usersToInvite, cb)
 
 generatePrio1Description = (prio1) ->
     return """
@@ -255,6 +258,18 @@ pagerdutyAlert = (description) ->
         scribeLog "ERROR pagerdutyAlert #{error}"
 
 
+describeCurrentRoles = (robot) ->
+    pashaState = getOrInitState(robot)
+    return "There's no prio1 in progress" unless pashaState.prio1?
+    lines = []
+    for role, roleDescription of roleDescriptions
+        username = pashaState.prio1.role[role]
+        if username
+            lines.push "#{roleDescription} is @#{username}"
+        else
+            lines.push "#{roleDescription} is not set"
+    return lines.join("\n")
+
 hasValue = (str) ->
     str? and str
 
@@ -275,4 +290,5 @@ module.exports = {
     relay: relay
     invitePrio1RolesToPrio1SlackChannel: invitePrio1RolesToPrio1SlackChannel
     setSlackChannelTopic: setSlackChannelTopic
+    describeCurrentRoles: describeCurrentRoles
 }

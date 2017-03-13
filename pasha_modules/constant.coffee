@@ -41,5 +41,14 @@ module.exports = {
         twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER || ''
         twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || ''
         twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || ''
+    },
+
+    roleDescriptions: {
+        starter: 'The one who reported the prio1'
+        confirmer: 'The one who confirmed the prio1'
+        leader: 'Engineer lead'
+        comm: 'Engineer point of contact'
+        support: 'Support lead'
+        marketing: 'Marketing lead'
     }
 }

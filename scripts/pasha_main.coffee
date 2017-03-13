@@ -7,11 +7,12 @@ _          = require 'lodash'
 # Hubot imports
 {TextMessage} = require('hubot/src/message')
 # Pasha imports
+{constant, roleDescriptions} = require '../pasha_modules/constant'
+
 util                     = require '../pasha_modules/util'
 {scribeLog}              = require '../pasha_modules/scribe_log'
 {Prio1, State, Channel}  = require '../pasha_modules/model'
 Workflow                 = require '../pasha_modules/workflow'
-{constant}               = require '../pasha_modules/constant'
 {registerModuleCommands} = require '../scripts/commands'
 
 botName = constant.botName
@@ -276,27 +277,7 @@ module.exports = (robot) ->
         catch error
             scribeLog "ERROR prio1Stop #{error}"
 
-    roleDescriptions =
-        starter: 'The one who reported the prio1'
-        confirmer: 'The one who confirmed the prio1'
-        leader: 'Engineer lead'
-        comm: 'Engineer point of contact'
-        support: 'Support lead'
-        marketing: 'Marketing lead'
-
     assignableRoles = ['leader', 'comm', 'support', 'marketing']
-
-    describeCurrentRoles = ->
-        pashaState = util.getOrInitState(robot)
-        return "There's no prio1 in progress" unless pashaState.prio1?
-        lines = []
-        for role, roleDescription of roleDescriptions
-            username = pashaState.prio1.role[role]
-            if username
-                lines.push "#{roleDescription} is @#{username}"
-            else
-                lines.push "#{roleDescription} is not set"
-        return lines.join("\n")
 
     robot.respond roleHelp, (msg) ->
         pashaState = util.getOrInitState(robot)
@@ -306,7 +287,7 @@ module.exports = (robot) ->
 
     robot.respond cmdRoles, (msg) ->
         try
-            msg.send describeCurrentRoles()
+            msg.send util.describeCurrentRoles(robot)
         catch error
             scribeLog "ERROR cmdRoles #{error} #{error.stack}"
 
@@ -343,7 +324,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned #{role} role to #{name}"))
-            util.invitePrio1RolesToPrio1SlackChannel()
+            util.invitePrio1RolesToPrio1SlackChannel(robot)
         catch error
             scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
@@ -401,7 +382,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "set status to #{status}"))
-            util.invitePrio1RolesToPrio1SlackChannel()
+            util.invitePrio1RolesToPrio1SlackChannel(robot)
         catch error
             scribeLog "ERROR statusText #{error}"
 

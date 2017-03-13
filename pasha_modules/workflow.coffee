@@ -32,11 +32,12 @@ class Workflow
 
     welcome: () =>
         @send "The prio1 is: *#{@state.prio1.title}*. Good luck."
-        @send describeCurrentRoles()
+        @send util.describeCurrentRoles(@robot)
         @send "---"
-        @remind 'leader', "Please share our best current estimate of impact; " + \
-            "\"don't know yet\" is fine.\nRemember, you can set a dedicated " + \
-            "Engineer point of contact at any time with '#{botName} role comm \<name\>'"
+        @remind 'leader', "Please share our best current estimate of impact; " +
+            "\"don't know yet\" is fine.\nRemember, you can set a dedicated " +
+            "Engineer point of contact at any time with '#{constant.botName} " +
+            "role comm \<name\>'"
         # TODO: once support contact is automatically set, remind them to
         # share incoming ticket volume
 
@@ -64,7 +65,7 @@ class Workflow
                     @state.prio1.channel = {id: data.channel.id, name: channelName}
                     @saveState()
                     @confirmMsg.send("Created channel <##{data.channel.id}>, please join and keep all prio1 communication there.")
-                    util.invitePrio1RolesToPrio1SlackChannel(() =>
+                    util.invitePrio1RolesToPrio1SlackChannel(@robot, () =>
                         @welcome()
                         @next @fiveMinutes, 5
                     )
