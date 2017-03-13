@@ -145,6 +145,38 @@ postToSlack = (channel, message) ->
     catch error
         scribeLog "ERROR postToSlack #{error}"
 
+relay = (message) ->
+    scribeLog "relaying: #{message}"
+    try
+        if constant.hipchatRelayRooms?.length > 0 && constant.hipchatApiToken
+            for room in constant.hipchatRelayRooms
+                util.postToHipchat(room, message)
+                scribeLog "sending #{message} to #{room}"
+        if constant.slackRelayChannels?.length > 0 && constant.slackApiToken
+            for channel in constant.slackRelayChannels
+                util.postToSlack(channel, message)
+                scribeLog "sending #{message} to ##{channel}"
+    catch error
+        scribeLog "ERROR relay #{error}"
+
+inviteUsersToSlackChannel = (channelId, userNames, cb) ->
+    pashaState = util.getOrInitState(robot)
+    users = _.filter(util.getUser(name, null, pashaState.users) for name in userNames)
+    invite = (user) -> (cb) ->
+        slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id}, cb)
+    async.parallel(
+        (invite(user) for user in users),
+        cb
+    )
+
+invitePrio1RolesToPrio1SlackChannel = (cb) ->
+    pashaState = util.getOrInitState(robot)
+    return unless pashaState.prio1.channel?
+    usersToInvite = [botName]
+    for own role, name of pashaState.prio1.role when name?
+        usersToInvite.push name if usersToInvite.indexOf(name) == -1
+    inviteUsersToSlackChannel(pashaState.prio1.channel.id, usersToInvite, cb)
+
 generatePrio1Description = (prio1) ->
     return """
         Outage '#{prio1.title}'
@@ -240,5 +272,7 @@ module.exports = {
     pagerdutyAlert: pagerdutyAlert
     hasValue: hasValue
     slackApi: slackApi
+    relay: relay
+    invitePrio1RolesToPrio1SlackChannel: invitePrio1RolesToPrio1SlackChannel
     setSlackChannelTopic: setSlackChannelTopic
 }
