@@ -46,6 +46,27 @@ Found a bug? Made a fix? Implemented a cool new feature? Or you just have some i
 
 For more information, visit the [contribution wiki page](../../wiki/Contribution)!
 
+### Development environment
+
+The new Docker-based development environment makes it easy to contribute to Pasha.
+
+You will need the following tools to be installed:
+
+- A working [Docker](https://www.docker.com/) environment
+- [Docker Compose](https://docs.docker.com/compose/install/) (gets installed along with some of the Docker distributions)
+
+To start developing, just issue the following commands:
+
+      git clone https://github.com/prezi/pasha
+      cd pasha
+      docker-compose up
+
+Depending on your Docker environment, you might need to execute `docker-compose up` with superuser privileges.
+
+After the environment started up, open http://localhost:3000/ in your browser and register/login to the [Rocket.Chat](https://rocket.chat/) interface (default administrator credentials: `admin:admin`).
+
+The root directory will be mounted into the Docker container and [Hubot](https://hubot.github.com/) runs with [Supervisor](https://github.com/petruisfan/node-supervisor), so any code change will cause the bot being reloaded.
+
 ##Documentation
 We created a [wiki](../../wiki) to describe how Pasha works.
 
