@@ -274,7 +274,7 @@ module.exports = (robot) ->
             "#{botName} status: display or set prio1 status, " +
             "see '#{botName} status help' for details\n" +
             "#{botName} contact add|remove <contactRole> <contact>: add and remove emergency contacts\n" +
-            "#{botName} contacts to list emergency contacts\n"
+            "#{botName} contacts: list emergency contacts\n"
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} changelog help_from_main"))
         robot.receive(new TextMessage(msg.message.user,
