@@ -52,7 +52,12 @@ getOrInitState = (adapter) ->
         pashaStateStr = adapter.brain.get(constant.pashaStateKey)
         scribeLog "state was not found, successfully initialized it"
     pashaState = JSON.parse(pashaStateStr)
+    if not pashaState.emergencyContacts?
+        pashaState.emergencyContacts = {}
     return pashaState
+
+saveState = (robot, pashaState) ->
+    robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
 
 updateHipchatTopic = (token, updateHipchatTopicCallback, msg, newTopic) ->
     try
@@ -153,11 +158,11 @@ relay = (message) ->
     try
         if constant.hipchatRelayRooms?.length > 0 && constant.hipchatApiToken
             for room in constant.hipchatRelayRooms
-                util.postToHipchat(room, message)
+                postToHipchat(room, message)
                 scribeLog "sending #{message} to #{room}"
         if constant.slackRelayChannels?.length > 0 && constant.slackApiToken
             for channel in constant.slackRelayChannels
-                util.postToSlack(channel, message)
+                postToSlack(channel, message)
                 scribeLog "sending #{message} to ##{channel}"
     catch error
         scribeLog "ERROR relay #{error}"
@@ -277,6 +282,7 @@ module.exports = {
     getUser: getUser
     downloadUsers : downloadUsers
     getOrInitState: getOrInitState
+    saveState: saveState
     ack: ack
     updateHipchatTopic: updateHipchatTopic
     postToHipchat: postToHipchat
