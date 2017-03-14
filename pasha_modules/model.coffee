@@ -3,6 +3,7 @@ class State
     constructor: ->
         @prio1 = null
         @users = []
+        @emergencyContacts = {}
 
 
 class Channel

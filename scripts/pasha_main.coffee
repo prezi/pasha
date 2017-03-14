@@ -38,6 +38,11 @@ roleHelp = /role$|role help$/i
 cmdRoles = /roles$/i
 cmdRole = /role (\w+)$/i
 cmdRoleParameters = /role (\w+) (.+)$/i
+#contact
+contactHelp = /contact$|contact help$/i
+setEmergencyContact = /contact add (\w+) (.+)$/i
+listEmergencyContacts = /contacts$/i
+removeEmergencyContact = /contact remove (\w+) (.+)$/i
 # status
 statusHelp = /status help$/i
 statusParameters = /status (.+)/i
@@ -66,6 +71,12 @@ commands =
         roleHelp,
         cmdRole,
         cmdRoleParameters
+    ]
+    contacts: [
+        contactHelp,
+        setEmergencyContact,
+        listEmergencyContacts,
+        removeEmergencyContact
     ]
     status: [
         statusHelp,
@@ -187,6 +198,7 @@ module.exports = (robot) ->
                             createChannel(baseName, tryNum + 1)
             # TODO: on other errors, default to #developers
             createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
+            @confirmMsg.send("Don't forget to invite emergency contacts:\n #{generateEmergencyContactList()}.")
 
         fiveMinutes: () =>
             @loadState()
@@ -260,7 +272,9 @@ module.exports = (robot) ->
             "#{botName} role <role> <name>: assign prio1 roles to people, " +
             "see '#{botName} role help' for details\n" +
             "#{botName} status: display or set prio1 status, " +
-            "see '#{botName} status help' for details"
+            "see '#{botName} status help' for details\n" +
+            "#{botName} contact add|remove <contactRole> <contact>: add and remove emergency contacts\n" +
+            "#{botName} contacts: list emergency contacts\n"
         robot.receive(new TextMessage(msg.message.user,
             "#{botName} changelog help_from_main"))
         robot.receive(new TextMessage(msg.message.user,
@@ -486,6 +500,75 @@ module.exports = (robot) ->
             invitePrio1RolesToPrio1SlackChannel()
         catch error
             scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
+
+    robot.respond contactHelp, (msg) ->
+        msg.send "Use \"contact add|remove contactRole name\" to add or remove Emergency Contacts"
+
+    generateEmergencyContactList = () ->
+        try
+            pashaState = util.getOrInitState(robot)
+            ec = pashaState.emergencyContacts
+            response = ''
+            for key of ec
+              response += "#{key}: @" + ec[key].join(", @")+"\n"
+            return response
+        catch error
+          scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
+
+    robot.respond setEmergencyContact, (msg) ->
+        try
+            pashaState = util.getOrInitState(robot)
+            contactRole = msg.match[1]
+            who = msg.match[2]
+
+            ec = pashaState.emergencyContacts
+
+            if who[0]=="@"
+              who=who.substr(1)
+
+            if not ec[contactRole]?
+                ec[contactRole]=[]
+
+            ec[contactRole].push(who)
+            util.saveState(robot, pashaState)
+
+            msg.send "@#{who} is now added to Emergency Contacts as #{contactRole}."
+        catch error
+          scribeLog "ERROR couldnt set emergency contact #{error} #{error.stack}"
+
+    robot.respond listEmergencyContacts, (msg) ->
+        try
+            response="Emergency Contacts: \n"
+            msg.send response + generateEmergencyContactList()
+        catch error
+          scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
+    robot.respond removeEmergencyContact, (msg) ->
+        try
+            pashaState = util.getOrInitState(robot)
+            contactRole = msg.match[1]
+            who = msg.match[2]
+            ec = pashaState.emergencyContacts
+
+            if who[0]=="@"
+              who=who.substr(1)
+
+            if not ec["#{contactRole}"]?
+              msg.send "There arent any contacts for #{contactRole}"
+              return
+
+            roleContacts = ec[contactRole]
+            if who in roleContacts
+                roleContacts.splice(roleContacts.indexOf(who), 1)
+                if roleContacts.length == 0
+                    delete pashaState.emergencyContacts[contactRole]
+                else
+                    pashaState.emergencyContacts[contactRole] = roleContacts
+                util.saveState(robot,pashaState)
+                msg.send "Removed @#{who} from the list of #{contactRole} emergency contacts"
+            else
+                msg.send "@#{who} wasn't even in the list of #{contactRole} contacts"
+        catch error
+            scribeLog "ERROR couldnt set emergency contact #{error} #{error.stack}"
 
     robot.respond statusHelp, (msg) ->
         msg.send "#{botName} status: " +

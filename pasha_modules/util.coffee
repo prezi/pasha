@@ -49,7 +49,12 @@ getOrInitState = (adapter) ->
         pashaStateStr = adapter.brain.get(constant.pashaStateKey)
         scribeLog "state was not found, successfully initialized it"
     pashaState = JSON.parse(pashaStateStr)
+    if not pashaState.emergencyContacts?
+        pashaState.emergencyContacts = {}
     return pashaState
+
+saveState = (robot, pashaState) ->
+    robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
 
 updateHipchatTopic = (token, updateHipchatTopicCallback, msg, newTopic) ->
     try
@@ -230,6 +235,7 @@ module.exports = {
     getUser: getUser
     downloadUsers : downloadUsers
     getOrInitState: getOrInitState
+    saveState: saveState
     ack: ack
     updateHipchatTopic: updateHipchatTopic
     postToHipchat: postToHipchat
