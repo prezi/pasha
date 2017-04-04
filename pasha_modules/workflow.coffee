@@ -14,7 +14,7 @@ class Workflow
         return @state
 
     saveState: () =>
-        @robot.brain.set(constant.pashaStateKey, JSON.stringify(@state))
+        util.saveState(@robot, @state)
 
     send: (message) =>
         if @state.prio1?.channel?.name?
