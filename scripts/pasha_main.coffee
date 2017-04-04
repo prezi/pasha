@@ -1,21 +1,19 @@
 # Pasha prio1 related functionalities
 # -----------------------------------
 
-dateformat = require('dateformat')
-async = require('async')
-_ = require('lodash')
+async      = require 'async'
+_          = require 'lodash'
+
 # Hubot imports
-TextMessage = require('hubot/src/message').TextMessage
+{TextMessage} = require('hubot/src/message')
 # Pasha imports
-scribeLog = require('../pasha_modules/scribe_log').scribeLog
-Prio1 = require('../pasha_modules/model').Prio1
-State = require('../pasha_modules/model').State
-Channel =  require('../pasha_modules/model').Channel
-constant = require('../pasha_modules/constant').constant
-util = require('../pasha_modules/util')
-hasValue = util.hasValue
-registerModuleCommands =
-    require('../scripts/commands').registerModuleCommands
+{constant, roleDescriptions} = require '../pasha_modules/constant'
+
+util                     = require '../pasha_modules/util'
+{scribeLog}              = require '../pasha_modules/scribe_log'
+{Prio1, State, Channel}  = require '../pasha_modules/model'
+Workflow                 = require '../pasha_modules/workflow'
+{registerModuleCommands} = require '../scripts/commands'
 
 botName = constant.botName
 
@@ -93,154 +91,16 @@ module.exports = (robot) ->
     robot.error (err, res) ->
         scribeLog "ERROR #{err} #{err.stack}"
 
-    inviteUsersToSlackChannel = (channelId, userNames, cb) ->
-        pashaState = util.getOrInitState(robot)
-        users = _.filter(util.getUser(name, null, pashaState.users) for name in userNames)
-        invite = (user) -> (cb) ->
-            util.slackApi("channels.invite", {token: constant.slackApiNonbotToken, channel: channelId, user: user.id}, cb)
-        async.parallel(
-            (invite(user) for user in users),
-            cb
-        )
-
-    invitePrio1RolesToPrio1SlackChannel = (cb) ->
-        pashaState = util.getOrInitState(robot)
-        return unless pashaState.prio1.channel?
-        usersToInvite = [botName]
-        for own role, name of pashaState.prio1.role when name?
-            usersToInvite.push name if usersToInvite.indexOf(name) == -1
-        inviteUsersToSlackChannel(pashaState.prio1.channel.id, usersToInvite, cb)
-
     setUsers = (users) ->
         pashaState = util.getOrInitState(robot)
         pashaState.users = users
         robot.brain.set(constant.pashaStateKey, JSON.stringify(pashaState))
         scribeLog "set #{users.length} users"
 
-    relay = (message) ->
-        scribeLog "relaying: #{message}"
-        try
-            if constant.hipchatRelayRooms?.length > 0 && constant.hipchatApiToken
-                for room in constant.hipchatRelayRooms
-                    util.postToHipchat(room, message)
-                    scribeLog "sending #{message} to #{room}"
-            if constant.slackRelayChannels?.length > 0 && constant.slackApiToken
-                for channel in constant.slackRelayChannels
-                    util.postToSlack(channel, message)
-                    scribeLog "sending #{message} to ##{channel}"
-        catch error
-            scribeLog "ERROR relay #{error}"
-
-    class Workflow
-        constructor: (robot, confirmMsg) ->
-            @robot = robot
-            @confirmMsg = confirmMsg
-            @state = null
-            @nextTimeoutId = null
-            @tenMinuteIntervalId = null
-
-        loadState: () =>
-            @state = util.getOrInitState(@robot)
-            return @state
-
-        saveState: () =>
-            @robot.brain.set(constant.pashaStateKey, JSON.stringify(@state))
-
-        send: (message) =>
-            if @state.prio1?.channel?.name?
-                @robot.messageRoom @state.prio1.channel.name, message
-            else
-                @confirmMsg.send message
-
-        remind: (role, message) =>
-            @send "@#{@state.prio1.role[role]}: #{message}"
-
-        next: (fun, minutes) =>
-            @nextTimeoutId = setTimeout(fun, minutes * 60 * 1000)
-
-        start: () => @zeroMinutes()
-
-        welcome: () =>
-            @send "The prio1 is: *#{@state.prio1.title}*. Good luck."
-            @send describeCurrentRoles()
-            @send "---"
-            @remind 'leader', "Please share our best current estimate of impact; \"don't know yet\" is fine.\nRemember, you can set a dedicated Engineer point of contact at any time with '#{botName} role comm \<name\>'"
-            # TODO: once support contact is automatically set, remind them to share incoming ticket volume
-
-        zeroMinutes: () =>
-            @loadState()
-            return unless @state.prio1?
-            util.sendConfirmEmail(@state.prio1)
-            util.pagerdutyAlert("outage: #{@state.prio1.title}")
-            # TODO: auto-assign support lead
-            createChannel = (baseName, tryNum = 0) =>
-                if tryNum > 0
-                    channelName = "#{baseName}-#{tryNum}"
-                else
-                    channelName = baseName
-                scribeLog "creating channel #{channelName}"
-                util.slackApi "channels.create", {name: channelName, token: constant.slackApiNonbotToken}, (err, res, data) =>
-                    if !err && data.ok
-                        scribeLog "created channel #{data.channel.name}"
-                        @state.prio1.channel = {id: data.channel.id, name: channelName}
-                        @saveState()
-                        @confirmMsg.send("Created channel <##{data.channel.id}>, please join and keep all prio1 communication there.")
-                        invitePrio1RolesToPrio1SlackChannel(() =>
-                            @welcome()
-                            @next @fiveMinutes, 5
-                        )
-                        util.setSlackChannelTopic(@state.prio1.channel.id, "Hangout: " + constant.hangoutUrl)
-                        relay "Prio1 channel opened <##{@state.prio1.channel.id}>" 
-                    else
-                        scribeLog "failed to create channel #{channelName}"
-                        @confirmMsg.send("Failed to create channel #{channelName}: #{err || data.error}")
-                        if data?.error == 'name_taken'
-                            createChannel(baseName, tryNum + 1)
-            # TODO: on other errors, default to #developers
-            createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
-            @confirmMsg.send("Don't forget to invite emergency contacts:\n #{generateEmergencyContactList()}.")
-
-        fiveMinutes: () =>
-            @loadState()
-            return unless @state.prio1?
-            # TODO: configurable link to the status page admin interface
-            @remind 'comm', 'Please update the green/yellow/red status of components on the status page.'
-            @remind 'support', 'Please double-check the updates on the status page, and start public communication if you have a relevant pre-approved message.'
-            @next @tenMinutes, 5
-
-        tenMinutes: () =>
-            @loadState()
-            @remind 'comm', "Please provide an ETA and a simple status update with '#{botName} status ...'\nBad example: packet loss between data centers.\nGood example: network issues, it may be out of our control."
-            # TODO: auto-assign marketing lead
-            @remind 'support', "Ask for clarifications if needed. If the ETA is above 5 minutes, please alert marketing and start textual public communication. Work with @#{@state.prio1.role.comm} to make sure the communicated information is accurate."
-            @tenMinuteIntervalId = setInterval(@everyTenMinutes, 10 * 60 * 1000)
-            @next @sixtyMinutes, 50
-
-        everyTenMinutes: () =>
-            @loadState()
-            @remind 'comm', "Please provide an ETA and a simple status update with '#{botName} status ...'"
-            @remind 'support', "Ask for clarifications if needed. Work with marketing and @#{@state.prio1.role.comm} to provide a public update."
-
-        sixtyMinutes: () =>
-            @loadState()
-            @remind 'marketing', "The prio1 has been going on for an hour. It's time to call a crisis communication meeting, prepare a reactive statement and messaging."
-            @next @twoHours, 60
-
-        twoHours: () =>
-            @loadState()
-            @remind 'marketing', "The prio1 has been going on for two hours. It's time to work with our Brand Communications director to alert HOX."
-
-        stop: () =>
-            @loadState()
-            @remind 'support', 'If possible, please verify that the prio1 is over. If not possible, please acknowledge that you understand engineering believes the prio1 is over.'
-            @remind 'support', "Please work with @#{@state.prio1.role.marketing} to update public communications channels, resolve the outstanding issue and update the green/yellow/red status on the status page. Ask @#{@state.prio1.role.comm} for clarifications as needed."
-            clearTimeout @nextTimeoutId if @nextTimeoutId?
-            clearInterval @tenMinuteIntervalId if @tenMinuteIntervalId?
-
     registerModuleCommands(robot, commands)
     try
         scribeLog 'initializing prio1 module'
-        if hasValue(constant.slackApiToken)
+        if util.hasValue(constant.slackApiToken)
             util.downloadUsers(constant.slackApiToken, setUsers)
     catch error
         scribeLog "ERROR initializing #{error}"
@@ -292,13 +152,13 @@ module.exports = (robot) ->
         response = "#{botName} prio1 start <problem>: initiate prio1 mode\n" +
             "#{botName} prio1 confirm: confirm prio1\n" +
             "#{botName} prio1 stop: stop prio1"
-        if hasValue(playbookUrl)
+        if util.hasValue(playbookUrl)
             response += "\n#{playbookInfo}"
         msg.send response
 
     robot.respond prio1Start, (msg) ->
         response =  "#{botName} prio1 start <problem>: initiate prio1 mode"
-        if hasValue(playbookUrl)
+        if util.hasValue(playbookUrl)
             response += "\n#{playbookInfo}"
         msg.send response
 
@@ -322,12 +182,12 @@ module.exports = (robot) ->
                 JSON.stringify(pashaState))
             response = "#{user} started the prio1: #{status}\n" +
                 "you can confirm the prio1 with '#{botName} prio1 confirm'"
-            if hasValue(playbookUrl)
+            if util.hasValue(playbookUrl)
                 response += "\n#{playbookInfo}"
             msg.send response
             prio1Room = constant.prio1Room
             if prio1Room
-                relay "#{user} started a prio1: #{status}. " +
+                util.relay "#{user} started a prio1: #{status}. " +
                     "you can confirm it by joining the '#{prio1Room}' room " +
                     "and saying '#{botName} prio1 confirm'"
             scribeLog "started prio1: #{status}"
@@ -375,7 +235,7 @@ module.exports = (robot) ->
             robot.brain.set(constant.pashaStateKey,
                 JSON.stringify(pashaState))
             newTopic = 'PRIO1_MODE=ON'
-            if hasValue(constant.hangoutUrl)
+            if util.hasValue(constant.hangoutUrl)
                 newTopic += " | hangout url: #{constant.hangoutUrl}"
                 msg.send "hangout url: #{constant.hangoutUrl}"
             util.updateHipchatTopic(constant.hipchatApiToken,
@@ -383,7 +243,7 @@ module.exports = (robot) ->
             msg.send "#{user} confirmed the prio1\n" +
                 "the leader of the prio1 is #{pashaState.prio1.role.leader}" +
                 ", you can change it with '#{botName} role leader <name>'"
-            relay "#{user} confirmed the prio1"
+            util.relay "#{user} confirmed the prio1"
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{user} confirmed the prio1"))
             scribeLog "confirmed prio1"
@@ -408,7 +268,7 @@ module.exports = (robot) ->
             user = msg.message.user.name
             response = "#{user} stopped the prio1: #{prio1.title}"
             msg.send response
-            relay response
+            util.relay response
             startTime = (new Date(prio1.time.start * 1000)).toISOString()
             confirmTime = (new Date(prio1.time.confirm * 1000)).toISOString()
             endTime = (new Date()).toISOString()
@@ -430,27 +290,7 @@ module.exports = (robot) ->
         catch error
             scribeLog "ERROR prio1Stop #{error}"
 
-    roleDescriptions =
-        starter: 'The one who reported the prio1'
-        confirmer: 'The one who confirmed the prio1'
-        leader: 'Engineer lead'
-        comm: 'Engineer point of contact'
-        support: 'Support lead'
-        marketing: 'Marketing lead'
-
     assignableRoles = ['leader', 'comm', 'support', 'marketing']
-
-    describeCurrentRoles = ->
-        pashaState = util.getOrInitState(robot)
-        return "There's no prio1 in progress" unless pashaState.prio1?
-        lines = []
-        for role, roleDescription of roleDescriptions
-            username = pashaState.prio1.role[role]
-            if username
-                lines.push "#{roleDescription} is @#{username}"
-            else
-                lines.push "#{roleDescription} is not set"
-        return lines.join("\n")
 
     robot.respond roleHelp, (msg) ->
         pashaState = util.getOrInitState(robot)
@@ -460,7 +300,7 @@ module.exports = (robot) ->
 
     robot.respond cmdRoles, (msg) ->
         try
-            msg.send describeCurrentRoles()
+            msg.send util.describeCurrentRoles(robot)
         catch error
             scribeLog "ERROR cmdRoles #{error} #{error.stack}"
 
@@ -497,7 +337,7 @@ module.exports = (robot) ->
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name}" +
                 " assigned #{role} role to #{name}"))
-            invitePrio1RolesToPrio1SlackChannel()
+            util.invitePrio1RolesToPrio1SlackChannel(robot)
         catch error
             scribeLog "ERROR cmdRoleParameters #{error} #{error.stack}"
 
@@ -618,13 +458,13 @@ module.exports = (robot) ->
                 JSON.stringify(pashaState))
             msg.reply msg.random util.ack
             response = "#{msg.message.user.name} set status to #{status}"
-            relay response + "\n prio1 channel: <##{pashaState.prio1.channel.id}>"
+            util.relay response + "\n prio1 channel: <##{pashaState.prio1.channel.id}>"
             util.sendStatusEmail(prio1)
             scribeLog response
             robot.receive(new TextMessage(msg.message.user,
                 "#{botName} changelog addsilent #{msg.message.user.name} " +
                 "set status to #{status}"))
-            invitePrio1RolesToPrio1SlackChannel()
+            util.invitePrio1RolesToPrio1SlackChannel(robot)
         catch error
             scribeLog "ERROR statusText #{error}"
 
@@ -633,7 +473,7 @@ module.exports = (robot) ->
 
     prio1Synonyms =
         ['prio1', 'prio 1', 'outage']
-    if hasValue(prio1MonitoredWebsite)
+    if util.hasValue(prio1MonitoredWebsite)
         prio1Synonyms.push("#{prio1MonitoredWebsite} is down")
     prio1SynonymsString = prio1Synonyms.join('|')
     prio1DetectorRegex =
