@@ -1,0 +1,14 @@
+{
+  "name": "mongo-seed",
+  "version": "0.0.1",
+  "description": "",
+  "main": "initdb.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^2.2.24"
+  }
+}
