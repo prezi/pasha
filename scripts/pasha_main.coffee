@@ -344,17 +344,6 @@ module.exports = (robot) ->
     robot.respond contactHelp, (msg) ->
         msg.send "Use \"contact add|remove contactRole name\" to add or remove Emergency Contacts"
 
-    generateEmergencyContactList = () ->
-        try
-            pashaState = util.getOrInitState(robot)
-            ec = pashaState.emergencyContacts
-            response = ''
-            for key of ec
-              response += "#{key}: @" + ec[key].join(", @")+"\n"
-            return response
-        catch error
-          scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
-
     robot.respond setEmergencyContact, (msg) ->
         try
             pashaState = util.getOrInitState(robot)
@@ -379,7 +368,7 @@ module.exports = (robot) ->
     robot.respond listEmergencyContacts, (msg) ->
         try
             response="Emergency Contacts: \n"
-            msg.send response + generateEmergencyContactList()
+            msg.send response + util.generateEmergencyContactList()
         catch error
           scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
     robot.respond removeEmergencyContact, (msg) ->

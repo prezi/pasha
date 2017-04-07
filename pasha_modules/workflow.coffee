@@ -78,7 +78,7 @@ class Workflow
                         createChannel(baseName, tryNum + 1)
         # TODO: on other errors, default to #developers
         createChannel "prio1-#{dateformat(new Date(), 'yyyy-mm-dd')}"
-        @confirmMsg.send("Don't forget to invite emergency contacts:\n #{generateEmergencyContactList()}.")
+        @confirmMsg.send("Don't forget to invite emergency contacts:\n #{util.generateEmergencyContactList()}.")
 
     fiveMinutes: () =>
         @loadState()

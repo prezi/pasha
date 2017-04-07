@@ -207,6 +207,17 @@ generatePrio1Status = (prio1) ->
         Confirmed by #{prio1.role.confirmer} at #{confirmTime.calendar()} - #{detectTime.fromNow()}
     """
 
+generateEmergencyContactList = () ->
+    try
+        pashaState = util.getOrInitState(robot)
+        ec = pashaState.emergencyContacts
+        response = ''
+        for key of ec
+          response += "#{key}: @" + ec[key].join(", @")+"\n"
+        return response
+    catch error
+      scribeLog "ERROR couldnt list emergency contacts #{error} #{error.stack}"
+
 sendStatusEmail = (prio1) ->
     try
         sendEmail(prio1.title, generatePrio1Status(prio1))
@@ -290,6 +301,7 @@ module.exports = {
     sendEmail: sendEmail
     sendConfirmEmail: sendConfirmEmail
     sendStatusEmail: sendStatusEmail
+    generateEmergencyContactList: generateEmergencyContactList
     pagerdutyAlert: pagerdutyAlert
     hasValue: hasValue
     slackApi: slackApi
