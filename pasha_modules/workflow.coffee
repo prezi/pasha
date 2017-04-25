@@ -1,7 +1,7 @@
-dateformat  = require 'dateformat'
-constant    = require './constant'
-util        = require './util'
-{scribeLog} = require '../pasha_modules/scribe_log'
+dateformat   = require 'dateformat'
+{ constant } = require './constant'
+util         = require './util'
+{scribeLog}  = require '../pasha_modules/scribe_log'
 
 class Workflow
     constructor: (@robot, @confirmMsg) ->
