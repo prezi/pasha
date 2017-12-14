@@ -10,7 +10,7 @@ At Prezi, Pasha has a crucial role during Prio1 situations and it helps us a lot
  
 Pasha is designed to be easily extensible. Its modules work the same way as [Hubot modules work](https://github.com/github/hubot/blob/master/docs/README.md#scripting).
 
-##Pasha’s functions
+## Pasha’s functions
    * Declare and manage a prio1s
     * start, confirm and stop
     * assign roles (leader, communication officer)
@@ -21,9 +21,9 @@ Pasha is designed to be easily extensible. Its modules work the same way as [Hub
    * Alert teams and people by phone/email through [Pagerduty](http://www.pagerduty.com/)
    * Update dashboards by adding, editing and removing graphs, e.g. [graphite](http://graphite.wikidot.com/) .
 
-##How to use/install it locally?
+## How to use/install it locally?
 
-###Requirements
+### Requirements
 
  * [Install Node] (../../wiki/Setting-up-the-Development-Environment#node)
  * [Install Redis](../../wiki/Setting-up-the-Development-Environment#redis)
@@ -67,6 +67,6 @@ After the environment started up, open http://localhost:3000/ in your browser an
 
 The root directory will be mounted into the Docker container and [Hubot](https://hubot.github.com/) runs with [Supervisor](https://github.com/petruisfan/node-supervisor), so any code change will cause the bot being reloaded.
 
-##Documentation
+## Documentation
 We created a [wiki](../../wiki) to describe how Pasha works.
 
