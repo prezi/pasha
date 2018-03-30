@@ -44,11 +44,12 @@ serviceNameKeyMapping = () ->
         httpsGetOptions = {
             hostname: pagerdutyHostName
             port: pagerdutyPort
-            path: "/api/v1/services"
+            path: "/services"
             method: "GET"
             headers: {
                 'Authorization': auth
                 'Content-Type': 'application/json'
+                'Accept': 'application/vnd.pagerduty+json;version=2'
             }
         }
 
@@ -104,11 +105,12 @@ getActiveIncidents = (msg) ->
         httpsGetOptions = {
             hostname: pagerdutyHostName
             port: pagerdutyPort
-            path: "/api/v1/incidents/?status=triggered,acknowledged"
+            path: "/incidents?statuses[]=triggered&statuses[]=acknowledged"
             method: "GET"
             headers: {
                 'Authorization': auth
                 'Content-Type': 'application/json'
+                'Accept': 'application/vnd.pagerduty+json;version=2'
             }
         }
 
@@ -122,7 +124,7 @@ getActiveIncidents = (msg) ->
                 incidentsDetails = ''
                 for incident in incidents
                     incidentsDetails += "\n#{getIncidentDetails(incident)}\n"
-                if dataJson['total'] == 0
+                if incidents.length == 0
                     msg.reply 'There are no active incidents'
                 else
                     msg.reply incidentsDetails
@@ -215,22 +217,21 @@ getPhoneNumberByEmail = (email, onSuccess) ->
 #returns a description for <incident> that includes the most relevant parameters
 getIncidentDetails = (incident) ->
     service = incident['service']
-    triggerSummaryData = incident['trigger_summary_data']
-    description = triggerSummaryData['description']
+    description = incident['description']
     assignedTo = incident['assigned_to']
 
-    response = "service name: #{service.name}, "
+    response = "service name: #{service.summary}, "
     if(description?)
         response += "description: #{description},"
-    response += "triggered at #{incident['created_on']}, " +
+    response += "triggered at #{incident['created_at']}, " +
         "status: #{incident['status']}"
 
-    acknowledgers = incident['acknowledgers']
-    if acknowledgers?
-        acknowledgerDetails = (acknowledger) ->
-            "#{acknowledger.object.name} at #{acknowledger.at}"
+    acknowledgements = incident['acknowledgements']
+    if acknowledgements?
+        acknowledgementDetails = (acknowledgement) ->
+            "#{acknowledgement.acknowledger.summary} at #{acknowledgement.at}"
         response += ', acknowledged by: ' +
-            acknowledgers.map(acknowledgerDetails).join(', ')
+            acknowledgements.map(acknowledgementDetails).join(', ')
 
     response += ", incident number: #{incident['incident_number']}"
     return response
