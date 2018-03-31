@@ -27,7 +27,7 @@ describe 'command registration', () ->
 
     beforeEach (done) ->
         pagerduty_get_services = nock("https://#{pagerdutyHostName}")
-            .get('/api/v1/services')
+            .get('/services?include[]=integrations&offset=0')
             .reply(200, get_services_response)
 
         robot = new Robot(null, 'mock-adapter', false, botName)
@@ -66,7 +66,7 @@ describe 'alert command', () ->
 
     beforeEach (done) ->
         pagerduty_get_services = nock("https://#{pagerdutyHostName}")
-            .get('/api/v1/services')
+            .get('/services?include[]=integrations&offset=0')
             .reply(200, get_services_response)
 
         robot = new Robot(null, 'mock-adapter', false, botName)
@@ -94,7 +94,7 @@ describe 'alert command', () ->
 
         pagerdutyAlertService = nock('https://events.pagerduty.com')
             .post('/generic/2010-04-15/create_event.json', {
-                service_key: "92b0d9bc4729439dbb0ce0ac0d505a5c"
+                service_key: "d4845d4850074efa9fd380eb4e80bb8c"
                 event_type: "trigger"
                 description: "Keep calm. There is no serious outage."
             }).reply(200, '{"status":"success","message":"Event processed",' +
@@ -106,7 +106,7 @@ describe 'alert command', () ->
             done()
         setTimeout () ->
             adapter.receive(new TextMessage(user,
-                "#{botName} alert trigger Alaa_Shafaee_test Keep calm. " +
+                "#{botName} alert trigger akamai Keep calm. " +
                 "There is no serious outage.")
             )
         , 1000
@@ -124,29 +124,27 @@ describe 'alert command', () ->
     it 'should list all active alerts', (done) ->
         getIncidentsResponse  = require('../test_files/incidents.json')
         pagerdutyGetActiveIncidents = nock("https://#{pagerdutyHostName}")
-            .get('/api/v1/incidents/?status=triggered,acknowledged')
+            .get('/incidents?statuses[]=triggered&statuses[]=acknowledged')
             .reply(200, getIncidentsResponse)
 
         adapter.on 'reply', (envelope, response) ->
             incidents = response[0].split('\n\n')
-            triggeredIncident = incidents[0]
-            acknowledgedIncident = incidents[1]
+            acknowledgedIncident = incidents[0]
+            triggeredIncident = incidents[1]
 
-            assert.match(triggeredIncident, /service name: Alaa_Shafaee_test/,
+            assert.match(triggeredIncident, /service name: tkornai-test/,
                 'service name should show in active incident details')
-            expectedDescription = /description: No outage, be positive. :\)/
+            expectedDescription = /description: Test 2/
             assert.match(triggeredIncident, expectedDescription,
                 'outage description should show in active incident details')
-            assert.match(triggeredIncident, /triggered at 2014-11-19T14:23:58/,
+            assert.match(triggeredIncident, /triggered at 2018-03-31T16:24:04Z/,
                 'incident trigger time should show in active incident details')
-            assert.match(triggeredIncident, /status: triggered/,
-                'incident status should show in active incident details')
-            assert.match(triggeredIncident, /incident number: 53779/,
+            assert.match(triggeredIncident, /incident number: 87618/,
                 'incident number should show in active incident details')
             assert.match(acknowledgedIncident, /status: acknowledged/,
                 'correct status should show for each active incident')
             assert.match(acknowledgedIncident,
-                /acknowledged by: Alaa Shafaee at 2014-11-19T17:57:12Z/,
+                /acknowledged by: Tamas Kornai at 2018-03-31T16:24:34Z/,
                 'names of acknowledgers and acknowledgment time' + '
                 should show in the details of acknowledged incidents')
             done()
@@ -155,9 +153,9 @@ describe 'alert command', () ->
 
     it 'should inform users when there are no active incidents', (done) ->
         getIncidentsResponse = '{"incidents":[],"limit":100,' +
-            '"offset":0,"total":0}'
+            '"offset":0,"total":null}'
         pagerdutyGetActiveIncidents = nock("https://#{pagerdutyHostName}")
-            .get("/api/v1/incidents/?status=triggered,acknowledged")
+            .get("/incidents?statuses[]=triggered&statuses[]=acknowledged")
             .reply(200, getIncidentsResponse)
 
         adapter.on 'reply', (envelope, response) ->
