@@ -37,14 +37,14 @@ serviceNameKey = {}
 # -------
 
 #stores the mappings of service names and their keys in 'serviceNameKey' json
-serviceNameKeyMapping = () ->
+serviceNameKeyMapping = (offset) ->
     auth = "Token token=#{pagerdutyApiKey}"
 
     try
         httpsGetOptions = {
             hostname: pagerdutyHostName
             port: pagerdutyPort
-            path: "/services"
+            path: "/services?include[]=integrations&offset=#{offset}"
             method: "GET"
             headers: {
                 'Authorization': auth
@@ -58,11 +58,20 @@ serviceNameKeyMapping = () ->
             res.on 'data', (chunk) ->
                 data += chunk.toString()
             res.on 'end', () ->
-                services = JSON.parse(data)["services"]
+                parsed_data = JSON.parse(data)
+                services = parsed_data["services"]
                 for service in services
-                    serviceNameKey[service.name] = service.service_key
+                    for integration in service.integrations
+                        serviceNameKey[service.name] = integration.integration_key
+                        break
+                scribeLog "Initialized service name to key mapping for offset #{offset}"
+                has_more = parsed_data["more"]
+                if has_more
+                    new_offset = parsed_data["offset"] + parsed_data["limit"]
+                    serviceNameKeyMapping(new_offset)
+                else
+                    scribeLog "Finished service name to key mapping initialization."
         req.end()
-        scribeLog "Initialized the mappings between services names and keys"
     catch error
         scribeLog "ERROR #{error}"
 
@@ -282,7 +291,7 @@ commands =
 module.exports = (robot) ->
 
     registerModuleCommands(robot, commands)
-    serviceNameKeyMapping()
+    serviceNameKeyMapping(0)
 
     robot.respond alertTriggerService, (msg) ->
         serviceName = msg.match[1]
