@@ -247,7 +247,6 @@ getIncidentDetails = (incident) ->
 
 #triggers an alert to a service given its service name
 alertServiceByName = (msg, serviceName, description) ->
-    auth = "Token token=#{pagerdutyApiKey}"
     if serviceNameKey[serviceName]?
         pagerdutyAlertService(msg, description,
             serviceNameKey[serviceName])
