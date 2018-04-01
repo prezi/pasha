@@ -142,21 +142,21 @@ getActiveIncidents = (msg) ->
         scribeLog "ERROR #{error}"
 
 #<email>: the email address of a user in PagerDuty
-#<onSuccess>: event handler function which will be called with the user id
-#returns the PagerDuty user id for the user with <email> email address. If the id is found,
-#the <onSuccess> method is called with the id as a parameter.
-getPDUserId = (email, onSuccess) ->
-    scribeLog "getPDUserId: #{email}"
+#<onSuccess>: event handler function which will be called with the phone numbers
+#returns the user's phone numbers registered in PagerDuty in a list.
+getPhoneNumberByEmail = (email, onSuccess) ->
+    scribeLog "getPhoneNumberByEmail: #{email}"
     auth = "Token token=#{pagerdutyApiKey}"
     try
         httpsGetOptions = {
             hostname: pagerdutyHostName
             port: pagerdutyPort
-            path: "/api/v1/users/?query=#{querystring.escape(email)}"
+            path: "/users/?query=#{querystring.escape(email)}&include[]=contact_methods"
             method: "GET"
             headers: {
                 'Authorization': auth
                 'Content-Type': 'application/json'
+                'Accept': 'application/vnd.pagerduty+json;version=2'
             }
         }
 
@@ -166,61 +166,30 @@ getPDUserId = (email, onSuccess) ->
                 data += chunk.toString()
             res.on 'end', () ->
                 dataJson = JSON.parse(data)
-                if dataJson['total'] == 0
+                users = dataJson['users']
+                if users.length == 0
                     scribeLog "User email (#{email}) is not set in PagerDuty"
                     scribeLog "pagerduty response: #{data}"
-                else if dataJson['total'] > 1
+                else if users.length > 1
                     scribeLog "Multiple matches in PagerDuty (for #{email})"
                     scribeLog "pagerduty response: #{data}"
                 else
-                    user_id = dataJson["users"][0]["id"]
+                    user = users[0]
+                    user_id = user["id"]
                     scribeLog "Found user in PagerDuty: #{email} => #{user_id}"
-                    onSuccess(user_id)
+                    phone_numbers = []
+                    for contact_method in user["contact_methods"]
+                        if contact_method["type"] == "phone_contact_method" ||
+                          contact_method["type"] == "sms_contact_method"
+                            phone = "+#{contact_method["country_code"]}#{contact_method["address"]}"
+                            phone_numbers.push phone
+                            scribeLog "Found phone number in PagerDuty: #{email} => #{phone}"
+                    onSuccess(phone_numbers)
         req.on "error", (e) ->
             scribeLog "Error: #{e.message}"
         req.end()
     catch error
         scribeLog "ERROR #{error}"
-
-#<email>: the email address of a user in PagerDuty
-#<onSuccess>: event handler function which will be called with the phone numbers
-#returns the user's phone numbers registered in PagerDuty in a list.
-getPhoneNumberByEmail = (email, onSuccess) ->
-    getPDUserId(email, (user_id) ->
-      auth = "Token token=#{pagerdutyApiKey}"
-      try
-          httpsGetOptions = {
-              hostname: pagerdutyHostName
-              port: pagerdutyPort
-              path: "/api/v1/users/#{user_id}/notification_rules"
-              method: "GET"
-              headers: {
-                  'Authorization': auth
-                  'Content-Type': 'application/json'
-              }
-          }
-
-          req = https.request httpsGetOptions, (res) ->
-              data = ''
-              res.on 'data', (chunk) ->
-                  data += chunk.toString()
-              res.on 'end', () ->
-                  dataJson = JSON.parse(data)
-                  phone_numbers = []
-                  for notification in dataJson["notification_rules"]
-                      contact = notification["contact_method"]
-                      if contact["type"] == "phone"
-                          phone = "+#{contact["country_code"]}#{contact["phone_number"]}"
-                          phone_numbers.push phone
-                          scribeLog "Found phone number in PagerDuty: #{email} => #{phone}"
-                  onSuccess(phone_numbers)
-              req.on "error", (e) ->
-                  scribeLog "Error: #{e.message}"
-          req.end()
-      catch error
-          scribeLog "Error: #{e.message}"
-    )
-
 
 #<incident>: a json object returned by the Pagerduty api for one incident
 #returns a description for <incident> that includes the most relevant parameters
