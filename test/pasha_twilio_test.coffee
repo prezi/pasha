@@ -114,14 +114,10 @@ describe 'command registration', () ->
 
         # Mock PagerDuty module
         get_users_response = require('../test_files/users.json')
-        get_notifications_response = require('../test_files/notifications.json')
         pagerdutyHostName = process.env.PAGERDUTY_HOST_NAME
         pagerduty_get_users = nock("https://#{pagerdutyHostName}")
-            .get('/api/v1/users/?query=test%40example.com')
+            .get('/users/?query=test%40example.com&include[]=contact_methods')
             .reply(200, get_users_response)
-        pagerduty_get_notification = nock("https://#{pagerdutyHostName}")
-            .get('/api/v1/users/PX123PD/notification_rules')
-            .reply(200, get_notifications_response)
         # Mock Sms and calling functions
         smsFunc = sinon.spy()
         callingFunc = sinon.spy()
