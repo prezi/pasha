@@ -37,7 +37,7 @@ serviceNameKey = {}
 # -------
 
 #stores the mappings of service names and their keys in 'serviceNameKey' json
-serviceNameKeyMapping = (offset) ->
+serviceNameKeyMapping = (offset = 0) ->
     auth = "Token token=#{pagerdutyApiKey}"
 
     try
@@ -259,7 +259,7 @@ commands =
 module.exports = (robot) ->
 
     registerModuleCommands(robot, commands)
-    serviceNameKeyMapping(0)
+    serviceNameKeyMapping()
 
     robot.respond alertTriggerService, (msg) ->
         serviceName = msg.match[1]
