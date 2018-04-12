@@ -1,1 +1,108 @@
-{"users":[{"id":"PX123PD","name":"Test","email":"test@example.com","time_zone":"Budapest","color":"teal","role":"admin","description":"","user_url":"/users/PX123PD","invitation_sent":false,"marketing_opt_out":false,"job_title":"Developer"}],"query":"test@example.com","active_account_users":96,"limit":25,"offset":0,"total":1}
+{
+  "users": [
+    {
+      "name": "Test",
+      "email": "test@example.com",
+      "time_zone": "Europe/Budapest",
+      "color": "turquoise",
+      "avatar_url": "https://secure.gravatar.com/avatar/someavatar.png?d=mm&r=PG",
+      "billed": true,
+      "role": "admin",
+      "description": null,
+      "invitation_sent": false,
+      "contact_methods": [
+        {
+          "id": "PZZZZZ2",
+          "type": "email_contact_method",
+          "summary": "Default",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PZZZZZ2",
+          "html_url": null,
+          "label": "Default",
+          "address": "test@example.com",
+          "send_short_email": false,
+          "send_html_email": true
+        },
+        {
+          "id": "PYYYYYB",
+          "type": "phone_contact_method",
+          "summary": "Mobile",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PYYYYYB",
+          "html_url": null,
+          "label": "Mobile",
+          "address": "987654321",
+          "blacklisted": false,
+          "country_code": 36
+        },
+        {
+          "id": "PAAAAA0",
+          "type": "push_notification_contact_method",
+          "summary": "test push notification",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PAAAAA0",
+          "html_url": null,
+          "label": "test push notification",
+          "address": "02aaaa6317b6f289a7f908b7187ddec21944302472ac812de527016e3xxxxx49",
+          "device_type": "ios",
+          "sounds": [
+            {
+              "type": "alert_high_urgency",
+              "file": "octtf"
+            },
+            {
+              "type": "alert_low_urgency",
+              "file": "default"
+            }
+          ],
+          "blacklisted": false,
+          "created_at": "2015-11-01T15:27:48+01:00"
+        },
+        {
+          "id": "PFAAAA5",
+          "type": "sms_contact_method",
+          "summary": "Mobile",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PFAAAA5",
+          "html_url": null,
+          "label": "Mobile",
+          "address": "123456789",
+          "blacklisted": false,
+          "country_code": 36,
+          "enabled": true
+        }
+      ],
+      "notification_rules": [
+        {
+          "id": "PXXXKBT",
+          "type": "assignment_notification_rule_reference",
+          "summary": "0 minutes: channel PXXXCH2",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PXXXKBT",
+          "html_url": null
+        },
+        {
+          "id": "PXXX09D",
+          "type": "assignment_notification_rule_reference",
+          "summary": "1 minutes: channel PXXXLFB",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PXXX09D",
+          "html_url": null
+        },
+        {
+          "id": "PXXX5CC",
+          "type": "assignment_notification_rule_reference",
+          "summary": "0 minutes: channel PXXXTP0",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PXXX5CC",
+          "html_url": null
+        }
+      ],
+      "job_title": "Infrastructure Engineer",
+      "teams": [],
+      "id": "PXXXXXW",
+      "type": "user",
+      "summary": "Test",
+      "self": "https://api.pagerduty.com/users/PXXXXXW",
+      "html_url": "https://prezi.pagerduty.com/users/PXXXXXW"
+    }
+  ],
+  "query": "test@example.com",
+  "limit": 25,
+  "offset": 0,
+  "total": null,
+  "more": false
+}
