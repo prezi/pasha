@@ -18,7 +18,7 @@
           "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PZZZZZ2",
           "html_url": null,
           "label": "Default",
-          "address": "tamas.kornai@prezi.com",
+          "address": "test@example.com",
           "send_short_email": false,
           "send_html_email": true
         },
@@ -40,7 +40,7 @@
           "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PAAAAA0",
           "html_url": null,
           "label": "test push notification",
-          "address": "0230616317b6f289a7f908b7187ddec21944302472ac812de527016e3f7dba49",
+          "address": "02aaaa6317b6f289a7f908b7187ddec21944302472ac812de527016e3xxxxx49",
           "device_type": "ios",
           "sounds": [
             {
@@ -70,24 +70,24 @@
       ],
       "notification_rules": [
         {
-          "id": "P44YKBT",
+          "id": "PXXXKBT",
           "type": "assignment_notification_rule_reference",
-          "summary": "0 minutes: channel PSQICH2",
-          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/P44YKBT",
+          "summary": "0 minutes: channel PXXXCH2",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PXXXKBT",
           "html_url": null
         },
         {
-          "id": "PQ6309D",
+          "id": "PXXX09D",
           "type": "assignment_notification_rule_reference",
-          "summary": "1 minutes: channel P3CALFB",
-          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PQ6309D",
+          "summary": "1 minutes: channel PXXXLFB",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PXXX09D",
           "html_url": null
         },
         {
-          "id": "P5UC5CC",
+          "id": "PXXX5CC",
           "type": "assignment_notification_rule_reference",
-          "summary": "0 minutes: channel PAX7TP0",
-          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/P5UC5CC",
+          "summary": "0 minutes: channel PXXXTP0",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/notification_rules/PXXX5CC",
           "html_url": null
         }
       ],

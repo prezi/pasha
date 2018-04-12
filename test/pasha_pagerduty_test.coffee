@@ -93,7 +93,7 @@ describe 'alert command', () ->
 
         pagerdutyAlertService = nock('https://events.pagerduty.com')
             .post('/generic/2010-04-15/create_event.json', {
-                service_key: "d4845d4850074efa9fd380eb4e80bb8c"
+                service_key: "xxxxxx4850074efa9fd380eb4eaaaaaa"
                 event_type: "trigger"
                 description: "Keep calm. There is no serious outage."
             }).reply(200, '{"status":"success","message":"Event processed",' +
@@ -131,7 +131,7 @@ describe 'alert command', () ->
             acknowledgedIncident = incidents[0]
             triggeredIncident = incidents[1]
 
-            assert.match(triggeredIncident, /service name: tkornai-test/,
+            assert.match(triggeredIncident, /service name: pd-test/,
                 'service name should show in active incident details')
             expectedDescription = /description: Test 2/
             assert.match(triggeredIncident, expectedDescription,
@@ -143,7 +143,7 @@ describe 'alert command', () ->
             assert.match(acknowledgedIncident, /status: acknowledged/,
                 'correct status should show for each active incident')
             assert.match(acknowledgedIncident,
-                /acknowledged by: Tamas Kornai at 2018-03-31T16:24:34Z/,
+                /acknowledged by: Test User at 2018-03-31T16:24:34Z/,
                 'names of acknowledgers and acknowledgment time' + '
                 should show in the details of acknowledged incidents')
             done()
