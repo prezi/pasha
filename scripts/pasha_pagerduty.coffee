@@ -182,8 +182,9 @@ getPhoneNumberByEmail = (email, onSuccess) ->
                         if contact_method["type"] == "phone_contact_method" ||
                           contact_method["type"] == "sms_contact_method"
                             phone = "+#{contact_method["country_code"]}#{contact_method["address"]}"
-                            phone_numbers.push phone
-                            scribeLog "Found phone number in PagerDuty: #{email} => #{phone}"
+                            if phone not in phone_numbers  # Don't add the same number twice
+                                phone_numbers.push phone
+                                scribeLog "Found phone number in PagerDuty: #{email} => #{phone}"
                     onSuccess(phone_numbers)
         req.on "error", (e) ->
             scribeLog "Error: #{e.message}"
