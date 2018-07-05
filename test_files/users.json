@@ -66,6 +66,18 @@
           "blacklisted": false,
           "country_code": 36,
           "enabled": true
+        },
+        {
+          "id": "PFAAAA5",
+          "type": "phone_contact_method",
+          "summary": "Mobile",
+          "self": "https://api.pagerduty.com/users/PXXXXXW/contact_methods/PFAAAA5",
+          "html_url": null,
+          "label": "Mobile",
+          "address": "123456789",
+          "blacklisted": false,
+          "country_code": 36,
+          "enabled": true
         }
       ],
       "notification_rules": [
